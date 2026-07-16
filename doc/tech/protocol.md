@@ -61,6 +61,92 @@ AMP_API_KEY=sk-...  # 环境变量方式
 
 `https://ampcode.com/settings/security#access-token`
 
+## 2b. BYOK 模型路由协议（amp code CLI 实现方案）
+
+BYOK 的核心机制是 **API Key 透传 + 模型名到 Provider 的路由映射**。
+
+### 环境变量接口
+
+```env
+# 必需
+AMP_API_KEY=<openai-sk-or-other-provider-key>
+AMP_URL=<https://your-amp-instance.com>
+
+# 可选
+AMP_MODEL_DEFAULT=gpt-4o              # 默认模型
+AMP_MODEL_ROUTE=./route-config.toml    # 自定义路由配置文件
+```
+
+### 模型路由流程
+
+```
+客户端请求 (model=gpt-4o, prompt=...)
+    │
+    ▼
+amp code CLI (路由层)
+    │
+    ├── 1. 解析请求中的 model 字段
+    ├── 2. 匹配路由表（本地配置 / 内置映射）
+    ├── 3. 注入 API Key（从 AMP_API_KEY 取出）
+    │
+    ▼
+    ├──→ OpenAI:    POST api.openai.com/v1/chat/completions
+    ├──→ Anthropic: POST api.anthropic.com/v1/messages
+    ├──→ 自定义:    POST <AMP_URL>/v1/chat/completions
+    │
+    ▼
+响应流 (SSE) 透传回客户端
+```
+
+### 路由表示例
+
+```toml
+# route-config.toml
+[routes]
+"gpt-4o" = { provider = "openai", endpoint = "https://api.openai.com/v1/chat/completions" }
+"gpt-4o-mini" = { provider = "openai", endpoint = "https://api.openai.com/v1/chat/completions" }
+"claude-sonnet-4" = { provider = "anthropic", endpoint = "https://api.anthropic.com/v1/messages" }
+"claude-fable-5" = { provider = "anthropic", endpoint = "https://api.anthropic.com/v1/messages" }
+
+# 通配兜底
+"*" = { provider = "openai", endpoint = "https://api.openai.com/v1/chat/completions" }
+
+[headers]
+# 根据 provider 注入不同认证头
+"openai" = { Authorization = "Bearer ${API_KEY}" }
+"anthropic" = { x-api-key = "${API_KEY}", anthropic-version = "2023-06-01" }
+```
+
+### 流式代理设计
+
+```
+CLI 客户端                     amp code BYOK Proxy              LLM Provider
+    │                                │                              │
+    ├── POST /v1/chat/completions ──►│                              │
+    │   (stream: true)               │                              │
+    │                                ├── POST /v1/chat/completions ─►│
+    │                                │   (Authorization: Bearer sk) │
+    │                                │   ◄── SSE stream ────────────│
+    │   ◄── SSE stream ─────────────│                              │
+    │                                │                              │
+```
+
+### 多 API Key 管理
+
+```env
+# 单一全局 Key（简化模式）
+AMP_API_KEY=sk-...
+
+# 多 Provider Key（进阶模式，通过配置文件）
+AMP_API_KEY_FILE=./api-keys.toml
+```
+
+```toml
+# api-keys.toml
+[keys]
+openai = "sk-..."
+anthropic = "sk-ant-..."
+
 ## 3. MCP 协议
 
 ### 本地 MCP
