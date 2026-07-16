@@ -1,0 +1,60 @@
+Abort connection: %s generating ACK frame failed: %d
+Abort connection: %s: cannot find own DCID
+Abort connection: aborted due to error in stream %llu
+Abort connection: adding DATAGRAME frame to packet failed: %d
+Abort connection: adding frame to packet failed: %d
+Abort connection: cannot add a new SCID
+Abort connection: cannot allocate BPU
+Abort connection: cannot allocate BPUs hash
+Abort connection: cannot allocate DCE
+Abort connection: cannot allocate packet: %s
+Abort connection: cannot create control stream due to peer-imposed limit
+Abort connection: cannot create crypto stream for level %u
+Abort connection: cannot create new stream: %s
+Abort connection: cannot create outgoing control stream
+Abort connection: cannot create outgoing QPACK decoder stream
+Abort connection: cannot create outgoing QPACK encoder stream
+Abort connection: cannot decode CRYPTO frame
+Abort connection: cannot decode STREAM frame
+Abort connection: cannot initialize QPACK decoder
+Abort connection: cannot insert BPU
+Abort connection: cannot insert DCE
+Abort connection: cannot insert stream frame
+Abort connection: cannot parse Priority Field Value in PRIORITY_UPDATE frame
+Abort connection: cannot retire CID seqno=%llu as it has not been allocated yet
+Abort connection: cannot retire CID seqno=%llu, for it is used as DCID in the packet
+Abort connection: cannot retire zero-length CID
+Abort connection: cannot set peer-supplied max_stream_data=%lluon stream %llu
+Abort connection: cannot track new SCID
+Abort connection: cannot write CANCEL_PUSH
+Abort connection: cannot write MAX_PUSH_ID
+Abort connection: cannot write SETTINGS
+Abort connection: Client cannot send HANDSHAKE_DONE frame
+Abort connection: DCID %.*s not found on new path
+Abort connection: DCID not found
+Abort connection: Error parsing frame
+Abort connection: error processing HTTP control stream
+Abort connection: error reading from HTTP control stream
+Abort connection: gen_ack_frequency_frame failed
+Abort connection: gen_ping_frame failed
+Abort connection: gen_rst_frame failed
+Abort connection: generate_connection_close_packet failed
+Abort connection: generate_handshake_done_frame failed
+Abort connection: generating BLOCKED frame failed: %d
+Abort connection: Generating MAX_DATA frame failed
+Abort connection: Generating MAX_STREAM_DATA frame failed
+Abort connection: generating MAX_STREAMS frame failed: %d
+Abort connection: generating NEW_CONNECTION_ID frame failed: %d
+Abort connection: generating NEW_TOKEN frame failed: %d
+Abort connection: generating PATH_CHALLENGE frame failed: %d
+Abort connection: generating PATH_RESPONSE frame failed: %d
+Abort connection: generating RETIRE_CONNECTION_ID frame failed: %d
+Abort connection: generating STOP_SENDING frame failed: %d
+Abort connection: generating STREAMS_BLOCKED frame failed: %d
+Abort connection: Incoming QPACK decoder stream %llu already exists: cannot create second stream %llu
+Abort connection: Incoming QPACK encoder stream %llu already exists: cannot create second stream %llu
+Abort connection: Internal error
+Abort connection: invalid frame
+Abort connection: NEW_CONNECTION_ID contains invalid CID length
+Abort connection: Packet Tolerance of zero is invalid
+Abort connection: Received invalid ACK

@@ -1,0 +1,60 @@
+  --bun                  Force the command to run with Bun instead of Node.js
+  // @amp-plugin updated automatically from https://ampcode.com/@amp/plugins/example.ts
+  $ bun pm pkg set bin.mycli=cli.js
+  amp review "HEAD~3" -i "check error handling" -f src/api.ts
+  bun ./*.html
+  bun build --compile --outfile=my-app ./cli.ts
+  bun build --minify --splitting --outdir=out ./index.jsx ./lib/worker.ts
+  bun build --outfile=bundle.js ./src/index.ts
+  bun build --target=bun --outfile=server.js ./server.ts
+  bun index.html
+  bun pm pkg                  manage data in package.json
+  bun run ./index.js
+  bunx --bun vite dev foo.js
+  bunx prettier foo.js
+  delete key ...         Delete keys from package.json
+  get [key ...]          Get values from package.json
+  Manage data in package.json
+  set key=value ...      Set values in package.json
+ *  https://github.com/MikeMcl/decimal.js
+ + package.json
+- File filter: file:path to find threads that touched a file: file:src/auth/login.ts
+--tsconfig-override <STR>          Specify custom tsconfig.json. Default <d>$cwd<r>/tsconfig.json
+: failed to stat package.json
+.css
+.d.ts
+.html
+.json
+.node
+.yaml
+[0m                  Force the command to run with Bun instead of Node.js
+[0m                  manage data in package.json
+[0m          Get values from package.json
+[0m         Delete keys from package.json
+[0m      Set values in package.json
+[0m could not open ": could not open " create package.json
+[0m dev foo.js
+[0m failed to parse tarball package.json
+[0m Failed to read package.json
+[0m failed to stat package.json
+[0m foo.js
+[0m missing `name` string in package.json
+[0m missing `version` string in package.json
+[0m. Retry package.json
+[0m" not found, but package exists/package.json
+[2m./my-script.ts
+[2mpackage.json
+[32mpackage-lock.json
+[32mpnpm-lock.yaml
+[34m./cli.ts
+[34m./index.js
+[34m./index.jsx ./lib/worker.ts
+[34m./server.ts
+[34m./src/index.ts
+[34mbin.mycli=cli.js
+[36m--outfile=bundle.js
+[36m--target=bun --outfile=server.js
+*** Add File: path/to/file.ts
+*** Add File: path/to/new/file.ts
+*** Delete File: path/to/delete.ts
+*** Move to: src/new-name.ts
