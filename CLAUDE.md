@@ -137,10 +137,48 @@ The amp code CLI should follow amp's proven architecture patterns:
 
 ## Git conventions
 
-- **Branching strategy**:
-  - `main` — stable/clean state, initial repo setup
-  - `develop` — integration branch, all RE artifacts and future features
-  - `feature/*` — individual feature branches (worktree per feature)
-- Worktrees: use git worktrees for isolated development (sibling directories like `/Volumes/ccc/copilot/amp/`).
-- Commit format: conventional commits (`feat:`, `chore:`, `docs:`, `fix:`, etc.).
-- Push workflow: work on worktree branch → merge into `develop` → PR into `main`.
+- **Branching strategy**: 每项功能/改动必须在独立分支上开发，通过 PR 合并回来
+  - `main` — 稳定分支，只接受从 `develop` 来的 PR
+  - `develop` — 集成分支，所有 feature 分支 PR 到此
+  - `feat/<name>` — 新功能分支
+  - `fix/<name>` — 修复分支
+  - `chore/<name>` — 杂务分支
+  - `docs/<name>` — 文档分支
+- **PR 优先**: 任何改动都必须创建 PR，经过 review 后合并。禁止直接 push 到 `main` 或 `develop`
+- **Worktrees**: 每个分支在独立 git worktree 中开发（`/Volumes/ccc/copilot/<branch-name>/`）
+- **Commit 格式**: conventional commits（`feat:`、`fix:`、`docs:`、`chore:` 等）
+- **合并策略**: feature branch → PR → squash merge 到 `develop` → 最终 PR → merge 到 `main`
+
+## GitHub / Git 管理
+
+优先使用 `gh` CLI 管理仓库和 GitHub 操作：
+
+```bash
+# 创建 worktree 新分支
+cd /Volumes/ccc/copilot
+git worktree add -b feat/xxx ../amp-feat-xxx develop
+
+# PR 流程（在 worktree 分支上）
+git add -A && git commit -m "feat: ..."
+git push -u origin feat/xxx
+gh pr create --base develop --title "feat: ..." --body "Changes: ..."
+gh pr review --approve   # 自审或请求 review
+gh pr merge --squash     # squash merge
+
+# 清理
+cd /Volumes/ccc/copilot
+git worktree remove ../amp-feat-xxx
+git branch -d feat/xxx        # 本地删除
+git push origin --delete feat/xxx  # 远程删除
+
+# 同步 develop
+git branch -D develop          # 删除本地 stale
+git fetch origin develop
+git worktree add -b develop ../amp-develop origin/develop
+
+# 其他常用 gh 命令
+gh pr list                     # 查看 PR
+gh pr checkout <number>        # 切换到 PR
+gh issue list                  # 查看 issues
+gh repo view                   # 查看仓库
+```
