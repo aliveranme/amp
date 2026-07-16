@@ -11,16 +11,16 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Current Status (2026-07-17)
 
-- **Phase**: Repository initialization and amp code research/RE phase
-- **Branch**: `aliveranme-init-repo` (current worktree, synced with `develop`)
-- **Last Commit**: `be067dc` — "docs: add development workflow rules and gh CLI usage"
+- **Phase**: Source code analysis completed — full module map and BYOK design written
+- **Branch**: `aliveranme-init-repo` (current worktree), `develop` (integration)
+- **Last Commit**: `161c1e9` — "docs: fix layout tree, update status, add BYOK proxy protocol"
 - **Pushed to GitHub**: `main`, `develop`, `aliveranme-init-repo`
 - **License**: MIT
 
 ```
 main                    → 23ad96b  Initial commit
-develop                 → be067dc  docs: add development workflow rules (squash-merged)
-aliveranme-init-repo*   → be067dc  docs: add development workflow rules
+develop                 → ea7f600  docs: fix layout tree, update status, add BYOK proxy
+aliveranme-init-repo*   → 161c1e9  docs: fix layout tree, update status, add BYOK proxy
 ```
 
 ## Repository Layout
@@ -55,7 +55,10 @@ aliveranme-init-repo*   → be067dc  docs: add development workflow rules
 │   └── tech/            # RE technical docs
 │       ├── architecture.md   # System architecture analysis
 │       ├── plugin-system.md  # Plugin system reverse engineering
-│       └── protocol.md       # Protocol/OAuth/BYOK/proxy analysis
+│       ├── protocol.md       # Protocol/OAuth/BYOK/proxy/env analysis
+│       └── source-map/       # Source code module mapping
+│           ├── module-map.md     # Full module decomposition
+│           └── byok-design.md    # BYOK implementation design
 │
 ├── src/                 # (future) Source code for amp code CLI
 ├── pkg/                 # (future) Shared packages
