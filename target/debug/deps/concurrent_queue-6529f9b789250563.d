@@ -1,0 +1,9 @@
+/Volumes/ccc/copilot/copilot-worktrees/amp/aliveranme-musical-enigma/target/debug/deps/concurrent_queue-6529f9b789250563.d: /Volumes/ccc/Rust/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/concurrent-queue-2.5.0/src/lib.rs /Volumes/ccc/Rust/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/concurrent-queue-2.5.0/src/bounded.rs /Volumes/ccc/Rust/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/concurrent-queue-2.5.0/src/single.rs /Volumes/ccc/Rust/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/concurrent-queue-2.5.0/src/unbounded.rs /Volumes/ccc/Rust/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/concurrent-queue-2.5.0/src/sync.rs
+
+/Volumes/ccc/copilot/copilot-worktrees/amp/aliveranme-musical-enigma/target/debug/deps/libconcurrent_queue-6529f9b789250563.rmeta: /Volumes/ccc/Rust/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/concurrent-queue-2.5.0/src/lib.rs /Volumes/ccc/Rust/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/concurrent-queue-2.5.0/src/bounded.rs /Volumes/ccc/Rust/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/concurrent-queue-2.5.0/src/single.rs /Volumes/ccc/Rust/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/concurrent-queue-2.5.0/src/unbounded.rs /Volumes/ccc/Rust/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/concurrent-queue-2.5.0/src/sync.rs
+
+/Volumes/ccc/Rust/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/concurrent-queue-2.5.0/src/lib.rs:
+/Volumes/ccc/Rust/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/concurrent-queue-2.5.0/src/bounded.rs:
+/Volumes/ccc/Rust/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/concurrent-queue-2.5.0/src/single.rs:
+/Volumes/ccc/Rust/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/concurrent-queue-2.5.0/src/unbounded.rs:
+/Volumes/ccc/Rust/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/concurrent-queue-2.5.0/src/sync.rs:

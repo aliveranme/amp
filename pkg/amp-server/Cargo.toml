@@ -1,0 +1,15 @@
+[package]
+name = "amp-server"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+amp-core = { path = "../amp-core" }
+amp-proxy = { path = "../amp-proxy" }
+amp-storage = { path = "../amp-storage" }
+axum = { workspace = true }
+tokio = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+tower-http = { workspace = true }
+tracing = { workspace = true }

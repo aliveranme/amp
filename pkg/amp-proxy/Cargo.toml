@@ -1,0 +1,13 @@
+[package]
+name = "amp-proxy"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+amp-core = { path = "../amp-core" }
+serde = { workspace = true }
+serde_json = { workspace = true }
+reqwest = { workspace = true }
+tokio = { workspace = true }
+tracing = { workspace = true }
+toml = { workspace = true }
