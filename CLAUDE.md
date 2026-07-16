@@ -11,52 +11,56 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Current Status (2026-07-17)
 
-- **Phase**: Repository initialization and amp code research/RE phase — first commit pushed
-- **Branch**: `aliveranme-init-repo` (current worktree), with `develop` and `main` upstream
-- **Last Commit**: `87c4a1c` — "feat: initialize project structure with amp code research"
-- **Pushed to GitHub**: `aliveranme-init-repo`, `develop`, `main` branches
+- **Phase**: Repository initialization and amp code research/RE phase
+- **Branch**: `aliveranme-init-repo` (current worktree, synced with `develop`)
+- **Last Commit**: `be067dc` — "docs: add development workflow rules and gh CLI usage"
+- **Pushed to GitHub**: `main`, `develop`, `aliveranme-init-repo`
+- **License**: MIT
 
 ```
-main                    → initial empty commit ("Initial commit")
-develop                 → feat: initialize project structure (37 files)
-aliveranme-init-repo*   → current worktree, same as develop
+main                    → 23ad96b  Initial commit
+develop                 → be067dc  docs: add development workflow rules (squash-merged)
+aliveranme-init-repo*   → be067dc  docs: add development workflow rules
 ```
 
 ## Repository Layout
 
 ```
 /
-├── resource/           # amp CLI binary + RE artifacts
-│   ├── amp             # Official amp CLI binary (darwin-arm64, 68MB)
-│   ├── install.sh      # Official install script
-│   ├── amp-version.txt # Version v0.0.1784219219-g3e9560
-│   ├── git-status.txt  # Git status snapshot
-│   ├── README.md       # Resource index
-│   ├── binary/         # Binary analysis (sections, symbols, strings)
-│   │   ├── analysis.md     # Binary overview
-│   │   ├── sections/       # Section layout analysis
-│   │   ├── symbols/        # Symbol table analysis
-│   │   ├── strings/        # Categorized string extractions
-│   │   └── extracted/      # JS bundle extracted from binary
-│   │       ├── amp.js      # 7MB/6123 lines extracted JS
-│   │       └── analysis.md # Extraction analysis
-│   └── utils/          # RE tools
-│       └── unbuned/    # Bun binary JS extractor (Python 3.6+)
-│           └── unbuned.py  # python3 unbuned.py <bun-binary>
+├── .gitignore           # Excludes: amp binary (68MB), extracted JS (7MB), .claude/, /output/
+├── .gitmodules          # Submodule: resource/utils/unbuned
+├── CLAUDE.md            # Project guidelines (this file)
 │
-├── doc/                # Official + RE technical docs
-│   ├── README.md       # Doc index
-│   ├── OVERVIEW.md     # amp overview & features
-│   ├── manual/         # 13 chapters of official docs
-│   └── tech/           # 3 RE technical docs
+├── resource/            # amp CLI binary + RE artifacts
+│   ├── amp              # (gitignored) Official amp CLI binary (darwin-arm64, 68MB)
+│   ├── install.sh       # Official install script
+│   ├── amp-version.txt  # Version v0.0.1784219219-g3e9560
+│   ├── git-status.txt   # Git status snapshot
+│   ├── README.md        # Resource index
+│   ├── binary/          # Binary analysis (sections, symbols, strings)
+│   │   ├── analysis.md      # Binary overview
+│   │   ├── sections/        # Section layout analysis
+│   │   ├── symbols/         # Symbol table analysis
+│   │   ├── strings/         # Categorized string extractions (131,867 total)
+│   │   └── extracted/       # JS bundle extracted from binary
+│   │       ├── amp.js       # (gitignored) 7MB/6123 lines extracted JS
+│   │       └── analysis.md  # Extraction analysis
+│   └── utils/           # RE tools
+│       └── unbuned/     # git submodule — Bun binary JS extractor (MIT)
+│
+├── doc/                 # Official + RE technical docs
+│   ├── README.md        # Doc index
+│   ├── OVERVIEW.md      # amp overview & features
+│   ├── manual/          # 13 chapters of official docs (from ampcode.com/manual)
+│   └── tech/            # RE technical docs
 │       ├── architecture.md   # System architecture analysis
 │       ├── plugin-system.md  # Plugin system reverse engineering
-│       └── protocol.md       # Protocol/OAuth/BYOK analysis
+│       └── protocol.md       # Protocol/OAuth/BYOK/proxy analysis
 │
-├── src/                # (future) Source code for amp code CLI
-├── pkg/                # (future) Shared packages
-├── cmd/                # (future) CLI entry points
-└── CLAUDE.md           # This file
+├── src/                 # (future) Source code for amp code CLI
+├── pkg/                 # (future) Shared packages
+├── cmd/                 # (future) CLI entry points
+└── CLAUDE.md            # This file
 ```
 
 ## Reverse Engineering Tools
@@ -134,6 +138,32 @@ The amp code CLI should follow amp's proven architecture patterns:
 - **MCP integration**: Model Context Protocol for tool extensibility (future)
 - **Agent modes**: Different levels of capability (low/medium/high/ultra)
 - **Thread/session management**: Persistent, shareable agent sessions
+
+## BYOK 接口约定
+
+amp code CLI 的核心 BYOK 接口：
+
+```env
+AMP_API_KEY=<provider-api-key>   # 必需：LLM 提供商的 API 密钥
+AMP_URL=<https://instance-url>    # 可选：自定义后端地址
+```
+
+- `AMP_API_KEY` — 透传到目标 LLM Provider 的认证密钥（OpenAI / Anthropic 等）
+- `AMP_URL` — 自定义部署地址，路由未匹配时转发到此端点
+- 模型路由逻辑完全由 CLI 本地完成，后端只需兼容 OpenAI API 格式
+
+## License
+
+- MIT License — see root `LICENSE` file (to be created with first source code commit)
+
+## CI / Automation
+
+- **GitHub Actions**: Standard CI workflows to be added with source code. Initial scope:
+  - `build` — 编译验证
+  - `test` — 单元测试 / 集成测试
+  - `lint` — 代码格式化检查
+- **PR merge**: 自审后可 squash merge。标准 Actions 自动运行后绿通过即可合并
+- **Secrets**: `AMP_API_KEY` etc. stored as GitHub Actions secrets for integration tests
 
 ## Git conventions
 
