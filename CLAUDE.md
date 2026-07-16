@@ -11,20 +11,16 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Current Status (2026-07-17)
 
-- **Phase**: Repository initialization and amp code research/RE phase
-- **Branch**: `aliveranme-init-repo` (single commit `23ad96b` "Initial commit")
-- **Status**: All content staged for first commit; files `A` (staged), `??` (untracked)
-- **Main worktree**: `/Volumes/ccc/copilot/amp` on `main` branch
+- **Phase**: Repository initialization and amp code research/RE phase — first commit pushed
+- **Branch**: `aliveranme-init-repo` (current worktree), with `develop` and `main` upstream
+- **Last Commit**: `87c4a1c` — "feat: initialize project structure with amp code research"
+- **Pushed to GitHub**: `aliveranme-init-repo`, `develop`, `main` branches
 
 ```
-Staged:   .gitmodules, resource/utils/unbuned (submodule @ a010095)
-Untracked: .claude/, CLAUDE.md, doc/, resource/ (excluding unbuned submodule)
+main                    → initial empty commit ("Initial commit")
+develop                 → feat: initialize project structure (37 files)
+aliveranme-init-repo*   → current worktree, same as develop
 ```
-
-All current content is non-code assets:
-- Official docs from [ampcode.com](https://ampcode.com/manual) — `doc/manual/`
-- Binary reverse engineering artifacts — `resource/`
-- Reverse engineering technical docs — `doc/tech/`
 
 ## Repository Layout
 
@@ -141,6 +137,10 @@ The amp code CLI should follow amp's proven architecture patterns:
 
 ## Git conventions
 
-- Worktrees: use git worktrees for isolated development (`.claude/worktrees/` or sibling directories).
-- Commit format: conventional commits preferred.
-- Push directly: `git push origin HEAD` (no GitHub Actions CI configured yet).
+- **Branching strategy**:
+  - `main` — stable/clean state, initial repo setup
+  - `develop` — integration branch, all RE artifacts and future features
+  - `feature/*` — individual feature branches (worktree per feature)
+- Worktrees: use git worktrees for isolated development (sibling directories like `/Volumes/ccc/copilot/amp/`).
+- Commit format: conventional commits (`feat:`, `chore:`, `docs:`, `fix:`, etc.).
+- Push workflow: work on worktree branch → merge into `develop` → PR into `main`.
