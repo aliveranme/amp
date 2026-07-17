@@ -24,29 +24,34 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Toaster, toast } from "sonner";
-import { fetchRoutes, createRoute, deleteRoute, fetchUser, updateUserName } from "@/lib/api";
+import { fetchRoutes, createRoute, deleteRoute, fetchUser, updateUserName, toggleRoute, fetchUserUsage } from "@/lib/api";
 import type { User, UserRoute } from "@/lib/types";
 
-function RouteCard({ route, onDelete }: { route: UserRoute; onDelete: () => void }) {
+function RouteCard({ route, onDelete, onToggle }: { route: UserRoute; onDelete: () => void; onToggle: () => void }) {
   return (
     <div className="flex items-center justify-between p-4 border rounded-lg hover:bg-accent/30 transition-colors">
       <div className="space-y-1 min-w-0 flex-1">
         <div className="flex items-center gap-2">
-          <Badge className="font-mono">{route.model}</Badge>
+          <Badge className={`font-mono ${!route.enabled ? 'opacity-50' : ''}`}>{route.model}</Badge>
           <span className="text-xs text-muted-foreground">→</span>
-          <Badge variant="secondary">{route.provider}</Badge>
+          <Badge variant={route.enabled ? "secondary" : "outline"}>{route.provider}</Badge>
+          {!route.enabled && <Badge variant="outline" className="text-xs">已停用</Badge>}
         </div>
         <p className="text-xs text-muted-foreground font-mono truncate">{route.endpoint}</p>
         <p className="text-xs text-muted-foreground">
           认证: <span className="font-mono">{route.auth_header}</span>
-          {route.api_key_encrypted && (
-            <> · Key: <span className="font-mono">{route.api_key_encrypted.slice(0, 8)}…</span></>
-          )}
+          {route.api_key_encrypted && <> · Key: <span className="font-mono">{route.api_key_encrypted.slice(0, 8)}…</span></>}
+          {route.rate_limit > 0 && <> · 限流: {route.rate_limit}/分</>}
         </p>
       </div>
-      <Button variant="ghost" size="sm" className="text-destructive shrink-0 ml-4" onClick={onDelete}>
-        删除
-      </Button>
+      <div className="flex items-center gap-2 shrink-0 ml-4">
+        <Button variant="ghost" size="sm" onClick={onToggle}>
+          {route.enabled ? "停用" : "启用"}
+        </Button>
+        <Button variant="ghost" size="sm" className="text-destructive" onClick={onDelete}>
+          删除
+        </Button>
+      </div>
     </div>
   );
 }
@@ -56,6 +61,7 @@ export default function UserDetailPage() {
   const router = useRouter();
   const [routes, setRoutes] = useState<UserRoute[]>([]);
   const [user, setUser] = useState<User | null>(null);
+  const [usage, setUsage] = useState({ total_requests: 0, total_tokens_in: 0, total_tokens_out: 0, by_model: [] as Array<{ model: string; requests: number; tokens_in: number; tokens_out: number }> });
   const [loading, setLoading] = useState(true);
   const [editingName, setEditingName] = useState(false);
   const [newName, setNewName] = useState("");
@@ -70,9 +76,10 @@ export default function UserDetailPage() {
   const load = async () => {
     setLoading(true);
     try {
-      const [r, u] = await Promise.all([fetchRoutes(id), fetchUser(id)]);
+      const [r, u, usg] = await Promise.all([fetchRoutes(id), fetchUser(id), fetchUserUsage(id)]);
       setRoutes(r);
       setUser(u);
+      setUsage(usg);
     } catch (e) {
       toast.error("加载失败: " + (e instanceof Error ? e.message : "未知错误"));
     } finally {
@@ -114,6 +121,16 @@ export default function UserDetailPage() {
       await load();
     } catch {
       toast.error("删除失败");
+    }
+  };
+
+  const handleToggleRoute = async (modelName: string, enabled: boolean) => {
+    try {
+      await toggleRoute(id, modelName, !enabled);
+      toast.success(enabled ? "已停用" : "已启用");
+      await load();
+    } catch {
+      toast.error("操作失败");
     }
   };
 
@@ -239,8 +256,42 @@ export default function UserDetailPage() {
             ) : (
               <div className="space-y-3">
                 {routes.map((r) => (
-                  <RouteCard key={r.id} route={r} onDelete={() => handleDeleteRoute(r.model)} />
+                  <RouteCard key={r.id} route={r} onDelete={() => handleDeleteRoute(r.model)} onToggle={() => handleToggleRoute(r.model, r.enabled)} />
                 ))}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Usage Section */}
+        <Card>
+          <CardHeader><CardTitle className="text-base">用量统计 (7天)</CardTitle></CardHeader>
+          <CardContent>
+            {loading ? (
+              <div className="space-y-2"><Skeleton className="h-4 w-40" /><Skeleton className="h-4 w-32" /></div>
+            ) : usage.total_requests === 0 ? (
+              <p className="text-muted-foreground text-sm text-center py-4">暂无用量数据</p>
+            ) : (
+              <div className="space-y-4">
+                <div className="grid grid-cols-3 gap-4 text-center">
+                  <div><p className="text-2xl font-bold">{usage.total_requests}</p><p className="text-xs text-muted-foreground">请求数</p></div>
+                  <div><p className="text-2xl font-bold">{(usage.total_tokens_in / 1000).toFixed(1)}K</p><p className="text-xs text-muted-foreground">输入 Token</p></div>
+                  <div><p className="text-2xl font-bold">{(usage.total_tokens_out / 1000).toFixed(1)}K</p><p className="text-xs text-muted-foreground">输出 Token</p></div>
+                </div>
+                {usage.by_model.length > 0 && (
+                  <>
+                    <Separator />
+                    <p className="text-sm font-medium">按模型</p>
+                    <div className="space-y-2">
+                      {usage.by_model.map((m) => (
+                        <div key={m.model} className="flex items-center justify-between text-sm">
+                          <Badge variant="outline" className="font-mono text-xs">{m.model}</Badge>
+                          <span className="text-xs text-muted-foreground">{m.requests} 请求 · {m.tokens_in + m.tokens_out} tokens</span>
+                        </div>
+                      ))}
+                    </div>
+                  </>
+                )}
               </div>
             )}
           </CardContent>

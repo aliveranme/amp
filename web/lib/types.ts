@@ -41,4 +41,7 @@ export interface UserRoute {
   auth_header: string;
   api_key_encrypted: string;
   created_at: string;
+  enabled: boolean;
+  rate_limit: number;
+  max_tokens: number;
 }

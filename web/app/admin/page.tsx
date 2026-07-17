@@ -31,7 +31,7 @@ function UserAvatar({ name }: { name: string }) {
 export default function AdminPage() {
   const [users, setUsers] = useState<User[]>([]);
   const [threads, setThreads] = useState<Thread[]>([]);
-  const [stats, setStats] = useState({ user_count: 0, route_count: 0 });
+  const [stats, setStats] = useState({ user_count: 0, route_count: 0, usage_7d: { total_requests: 0, total_tokens_in: 0, total_tokens_out: 0 } });
   const [loading, setLoading] = useState(true);
   const [name, setName] = useState("");
   const [newKey, setNewKey] = useState("");
@@ -157,8 +157,8 @@ export default function AdminPage() {
                 <>
                   <Card><CardContent className="pt-6"><p className="text-sm text-muted-foreground">用户数</p><p className="text-3xl font-bold mt-1">{stats.user_count}</p></CardContent></Card>
                   <Card><CardContent className="pt-6"><p className="text-sm text-muted-foreground">路由数</p><p className="text-3xl font-bold mt-1">{stats.route_count}</p></CardContent></Card>
-                  <Card><CardContent className="pt-6"><p className="text-sm text-muted-foreground">线程数</p><p className="text-3xl font-bold mt-1">{threads.length}</p></CardContent></Card>
-                  <Card><CardContent className="pt-6"><p className="text-sm text-muted-foreground">活跃状态</p><p className="text-3xl font-bold mt-1 text-green-600">运行中</p></CardContent></Card>
+                  <Card><CardContent className="pt-6"><p className="text-sm text-muted-foreground">请求数(7d)</p><p className="text-3xl font-bold mt-1">{stats.usage_7d.total_requests}</p></CardContent></Card>
+                  <Card><CardContent className="pt-6"><p className="text-sm text-muted-foreground">Token(7d)</p><p className="text-3xl font-bold mt-1">{stats.usage_7d.total_tokens_in + stats.usage_7d.total_tokens_out}</p></CardContent></Card>
                 </>
               )}
             </div>

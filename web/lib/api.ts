@@ -13,7 +13,7 @@ const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
 
 // ─── Stats ────────────────────────────────────────────────────────
 
-export async function fetchStats(): Promise<{ user_count: number; route_count: number }> {
+export async function fetchStats(): Promise<{ user_count: number; route_count: number; usage_7d: { total_requests: number; total_tokens_in: number; total_tokens_out: number } }> {
   return apiFetch(`${API_BASE}/admin/api/stats`);
 }
 
@@ -70,7 +70,7 @@ export async function fetchRoutes(userId: string): Promise<UserRoute[]> {
 
 export async function createRoute(
   userId: string,
-  data: { model: string; provider: string; endpoint: string; api_key?: string }
+  data: { model: string; provider: string; endpoint: string; api_key?: string; enabled?: boolean; rate_limit?: number; max_tokens?: number }
 ): Promise<void> {
   await apiFetch(`${API_BASE}/admin/api/users/${userId}/routes`, {
     method: 'POST',
@@ -79,8 +79,22 @@ export async function createRoute(
   });
 }
 
+export async function toggleRoute(userId: string, model: string, enabled: boolean): Promise<void> {
+  await apiFetch(`${API_BASE}/admin/api/users/${userId}/routes/${model}`, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ enabled }),
+  });
+}
+
 export async function deleteRoute(userId: string, model: string): Promise<void> {
   await apiFetch(`${API_BASE}/admin/api/users/${userId}/routes/${model}`, {
     method: 'DELETE',
   });
+}
+
+// ─── Usage ──────────────────────────────────────────────────────
+
+export async function fetchUserUsage(userId: string, days = 7): Promise<{ total_requests: number; total_tokens_in: number; total_tokens_out: number; by_model: Array<{ model: string; requests: number; tokens_in: number; tokens_out: number }> }> {
+  return apiFetch(`${API_BASE}/admin/api/users/${userId}/usage?days=${days}`);
 }
