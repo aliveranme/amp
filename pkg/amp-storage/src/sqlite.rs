@@ -12,11 +12,12 @@ pub async fn init_pool(path: &str) -> Result<SqlitePool, sqlx::Error> {
         .max_connections(5)
         .connect(path)
         .await?;
+    sqlx::query("PRAGMA foreign_keys = ON").execute(&pool).await?;
     run_migrations(&pool).await?;
     Ok(pool)
 }
 
-async fn run_migrations(pool: &SqlitePool) -> Result<(), sqlx::Error> {
+pub(crate) async fn run_migrations(pool: &SqlitePool) -> Result<(), sqlx::Error> {
     for (i, migration) in MIGRATIONS.iter().enumerate() {
         sqlx::query(migration).execute(pool).await.map_err(|e| {
             tracing::error!("Migration {i} failed: {e}");
@@ -119,14 +120,18 @@ pub async fn update_thread_status(
 }
 
 pub async fn delete_thread(pool: &SqlitePool, id: &uuid::Uuid) -> Result<bool, sqlx::Error> {
-    // Delete messages first (foreign key), then thread
+    let mut tx = pool.begin().await?;
+    sqlx::query("DELETE FROM sessions WHERE thread_id = ?")
+        .bind(id.to_string())
+        .execute(&mut *tx).await?;
     sqlx::query("DELETE FROM messages WHERE thread_id = ?")
         .bind(id.to_string())
-        .execute(pool).await?;
+        .execute(&mut *tx).await?;
     let rows = sqlx::query("DELETE FROM threads WHERE id = ?")
         .bind(id.to_string())
-        .execute(pool).await?
+        .execute(&mut *tx).await?
         .rows_affected();
+    tx.commit().await?;
     Ok(rows > 0)
 }
 
@@ -148,13 +153,14 @@ pub async fn add_message(
         MessageRole::System => "system",
         MessageRole::Tool => "tool",
     };
+    let mut tx = pool.begin().await?;
     sqlx::query("INSERT INTO messages (id, thread_id, role, content, timestamp) VALUES (?, ?, ?, ?, ?)")
         .bind(&id).bind(thread_id.to_string()).bind(role_str).bind(content).bind(&now)
-        .execute(pool).await?;
-    // Update thread updated_at
+        .execute(&mut *tx).await?;
     sqlx::query("UPDATE threads SET updated_at = ? WHERE id = ?")
         .bind(&now).bind(thread_id.to_string())
-        .execute(pool).await?;
+        .execute(&mut *tx).await?;
+    tx.commit().await?;
     Ok(Message {
         id: uuid::Uuid::parse_str(&id).unwrap(),
         role,
