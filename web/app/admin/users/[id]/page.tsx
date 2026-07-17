@@ -72,6 +72,8 @@ export default function UserDetailPage() {
   const [provider, setProvider] = useState("opencode");
   const [endpoint, setEndpoint] = useState("");
   const [apiKey, setApiKey] = useState("");
+  const [rateLimit, setRateLimit] = useState("0");
+  const [maxTokens, setMaxTokens] = useState("0");
 
   const load = async () => {
     setLoading(true);
@@ -103,11 +105,13 @@ export default function UserDetailPage() {
   const handleAddRoute = async () => {
     if (!endpoint.trim()) return;
     try {
-      await createRoute(id, { model, provider, endpoint, api_key: apiKey || undefined });
+      await createRoute(id, { model, provider, endpoint, api_key: apiKey || undefined, rate_limit: parseInt(rateLimit) || undefined, max_tokens: parseInt(maxTokens) || undefined });
       toast.success("路由已添加");
       setOpen(false);
       setEndpoint("");
       setApiKey("");
+      setRateLimit("0");
+      setMaxTokens("0");
       await load();
     } catch {
       toast.error("添加路由失败");
@@ -240,6 +244,16 @@ export default function UserDetailPage() {
                   <div>
                     <label className="text-sm font-medium">Provider API Key</label>
                     <Input type="password" placeholder="sk-..." value={apiKey} onChange={(e) => setApiKey(e.target.value)} />
+                  </div>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="text-sm font-medium">限流 (请求/分)</label>
+                      <Input type="number" placeholder="0=不限" value={rateLimit} onChange={(e) => setRateLimit(e.target.value)} />
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium">最大 Token</label>
+                      <Input type="number" placeholder="0=不限" value={maxTokens} onChange={(e) => setMaxTokens(e.target.value)} />
+                    </div>
                   </div>
                   <Button className="w-full" onClick={handleAddRoute}>添加</Button>
                 </div>
