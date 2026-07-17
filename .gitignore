@@ -19,3 +19,6 @@ __pycache__/
 # Temp extraction output
 /output/
 target/
+*.db
+# Local Pi runtime state
+.atl/

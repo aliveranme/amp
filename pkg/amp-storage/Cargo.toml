@@ -6,6 +6,7 @@ edition = "2021"
 [dependencies]
 amp-core = { path = "../amp-core" }
 chrono = { workspace = true }
+serde = { workspace = true }
 serde_json = { workspace = true }
 sqlx = { workspace = true }
 tokio = { workspace = true }
