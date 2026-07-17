@@ -90,9 +90,7 @@ export default function UserDetailPage() {
           <CardHeader className="flex flex-row items-center justify-between">
             <CardTitle>路由规则</CardTitle>
             <Dialog open={open} onOpenChange={setOpen}>
-              <DialogTrigger>
-                <Button size="sm">添加路由</Button>
-              </DialogTrigger>
+              <DialogTrigger render={<Button size="sm">添加路由</Button>} />
               <DialogContent>
                 <DialogHeader>
                   <DialogTitle>添加路由规则</DialogTitle>

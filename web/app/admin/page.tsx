@@ -68,9 +68,7 @@ export default function AdminPage() {
             </Badge>
           </div>
           <Dialog open={open} onOpenChange={setOpen}>
-            <DialogTrigger>
-              <Button>创建用户</Button>
-            </DialogTrigger>
+            <DialogTrigger render={<Button>创建用户</Button>} />
             <DialogContent>
               <DialogHeader>
                 <DialogTitle>
