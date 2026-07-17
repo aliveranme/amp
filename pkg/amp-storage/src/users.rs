@@ -39,6 +39,16 @@ pub async fn list_users(pool: &SqlitePool) -> Result<Vec<UserRow>, sqlx::Error> 
         .await
 }
 
+/// Get a single user by user_id.
+pub async fn get_user_by_id(pool: &SqlitePool, user_id: &str) -> Result<Option<UserRow>, sqlx::Error> {
+    sqlx::query_as::<_, UserRow>(
+        "SELECT api_key, user_id, name, created_at FROM users WHERE user_id = ?"
+    )
+    .bind(user_id)
+    .fetch_optional(pool)
+    .await
+}
+
 /// Get total user count.
 pub async fn user_count(pool: &SqlitePool) -> Result<i64, sqlx::Error> {
     sqlx::query_scalar("SELECT COUNT(*) FROM users")

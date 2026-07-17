@@ -22,7 +22,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Toaster, toast } from "sonner";
-import { fetchRoutes, createRoute, deleteRoute, fetchUsers, updateUserName } from "@/lib/api";
+import { fetchRoutes, createRoute, deleteRoute, fetchUser, updateUserName } from "@/lib/api";
 import type { User, UserRoute } from "@/lib/types";
 
 export default function UserDetailPage() {
@@ -30,6 +30,7 @@ export default function UserDetailPage() {
   const router = useRouter();
   const [routes, setRoutes] = useState<UserRoute[]>([]);
   const [user, setUser] = useState<User | null>(null);
+  const [loading, setLoading] = useState(true);
   const [editingName, setEditingName] = useState(false);
   const [newName, setNewName] = useState("");
   const [open, setOpen] = useState(false);
@@ -42,11 +43,14 @@ export default function UserDetailPage() {
 
   const load = async () => {
     try {
-      const [r, u] = await Promise.all([fetchRoutes(id), fetchUsers()]);
+      setLoading(true);
+      const [r, u] = await Promise.all([fetchRoutes(id), fetchUser(id)]);
       setRoutes(r);
-      setUser(u.find((x) => x.user_id === id) ?? null);
-    } catch {
-      toast.error("无法加载路由配置");
+      setUser(u);
+    } catch (e) {
+      toast.error("加载失败: " + (e instanceof Error ? e.message : "未知错误"));
+    } finally {
+      setLoading(false);
     }
   };
   useEffect(() => { load(); }, [id]);
@@ -58,8 +62,8 @@ export default function UserDetailPage() {
       toast.success("名称已更新");
       setEditingName(false);
       await load();
-    } catch {
-      toast.error("更新失败");
+    } catch (e) {
+      toast.error("更新失败: " + (e instanceof Error ? e.message : ""));
     }
   };
 
@@ -108,8 +112,8 @@ export default function UserDetailPage() {
             </div>
           ) : (
             <>
-              <h1 className="text-xl font-bold">{user?.name ?? "用户"}</h1>
-              <Button size="sm" variant="outline" onClick={() => { setNewName(user?.name ?? ""); setEditingName(true); }}>
+              <h1 className="text-xl font-bold">{loading ? "加载中..." : (user?.name ?? "用户")}</h1>
+              <Button size="sm" variant="outline" disabled={loading} onClick={() => { setNewName(user?.name ?? ""); setEditingName(true); }}>
                 编辑名称
               </Button>
             </>

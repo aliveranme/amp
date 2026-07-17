@@ -59,6 +59,7 @@ pub async fn create(config: AppConfig) -> Router {
         .route("/admin/api/stats", get(admin::dashboard_stats))
         .route("/admin/api/users", get(admin::list_users))
         .route("/admin/api/users", post(admin::create_user))
+        .route("/admin/api/users/{user_id}", get(admin::get_user))
         .route("/admin/api/users/{user_id}", delete(admin::delete_user))
         .route("/admin/api/users/{user_id}", patch(admin::update_user_name))
         .route("/admin/api/users/{user_id}/routes", get(admin::list_routes))

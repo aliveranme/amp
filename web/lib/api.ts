@@ -1,53 +1,61 @@
 import type { Thread, User, UserRoute } from '@/lib/types';
 
+async function apiFetch<T>(url: string, opts?: RequestInit): Promise<T> {
+  const res = await fetch(url, opts);
+  if (!res.ok) {
+    const body = await res.text().catch(() => "");
+    throw new Error(`HTTP ${res.status}: ${body.slice(0, 200)}`);
+  }
+  return res.json();
+}
+
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
 
 // ─── Stats ────────────────────────────────────────────────────────
 
 export async function fetchStats(): Promise<{ user_count: number; route_count: number }> {
-  const res = await fetch(`${API_BASE}/admin/api/stats`);
-  return res.json();
+  return apiFetch(`${API_BASE}/admin/api/stats`);
 }
 
 // ─── Threads ─────────────────────────────────────────────────────
 
 export async function fetchThreads(): Promise<Thread[]> {
-  const res = await fetch(`${API_BASE}/api/threads`);
-  return res.json();
+  return apiFetch(`${API_BASE}/api/threads`);
 }
 
 export async function createThread(title: string): Promise<Thread> {
-  const res = await fetch(`${API_BASE}/api/threads`, {
+  return apiFetch(`${API_BASE}/api/threads`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ title }),
   });
-  return res.json();
 }
 
 // ─── Admin: Users ────────────────────────────────────────────────
 
 export async function fetchUsers(): Promise<User[]> {
-  const res = await fetch(`${API_BASE}/admin/api/users`);
-  const data = await res.json();
+  const data = await apiFetch<{ users: User[] }>(`${API_BASE}/admin/api/users`);
   return data.users ?? [];
 }
 
+export async function fetchUser(userId: string): Promise<User> {
+  return apiFetch<User>(`${API_BASE}/admin/api/users/${userId}`);
+}
+
 export async function createUser(name: string): Promise<User> {
-  const res = await fetch(`${API_BASE}/admin/api/users`, {
+  return apiFetch<User>(`${API_BASE}/admin/api/users`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ name }),
   });
-  return res.json();
 }
 
 export async function deleteUser(userId: string): Promise<void> {
-  await fetch(`${API_BASE}/admin/api/users/${userId}`, { method: 'DELETE' });
+  await apiFetch(`${API_BASE}/admin/api/users/${userId}`, { method: 'DELETE' });
 }
 
 export async function updateUserName(userId: string, name: string): Promise<void> {
-  await fetch(`${API_BASE}/admin/api/users/${userId}`, {
+  await apiFetch(`${API_BASE}/admin/api/users/${userId}`, {
     method: 'PATCH',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ name }),
@@ -57,15 +65,14 @@ export async function updateUserName(userId: string, name: string): Promise<void
 // ─── Admin: Routes ──────────────────────────────────────────────
 
 export async function fetchRoutes(userId: string): Promise<UserRoute[]> {
-  const res = await fetch(`${API_BASE}/admin/api/users/${userId}/routes`);
-  return res.json();
+  return apiFetch(`${API_BASE}/admin/api/users/${userId}/routes`);
 }
 
 export async function createRoute(
   userId: string,
   data: { model: string; provider: string; endpoint: string; api_key?: string }
 ): Promise<void> {
-  await fetch(`${API_BASE}/admin/api/users/${userId}/routes`, {
+  await apiFetch(`${API_BASE}/admin/api/users/${userId}/routes`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(data),
@@ -73,7 +80,7 @@ export async function createRoute(
 }
 
 export async function deleteRoute(userId: string, model: string): Promise<void> {
-  await fetch(`${API_BASE}/admin/api/users/${userId}/routes/${model}`, {
+  await apiFetch(`${API_BASE}/admin/api/users/${userId}/routes/${model}`, {
     method: 'DELETE',
   });
 }

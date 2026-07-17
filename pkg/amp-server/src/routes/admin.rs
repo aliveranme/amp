@@ -62,6 +62,16 @@ pub async fn list_users(
     Ok(Json(ListUsersResponse { users }))
 }
 
+pub async fn get_user(
+    State(state): State<Arc<AppState>>,
+    Path(user_id): Path<String>,
+) -> Result<Json<UserRow>, AppError> {
+    let user = users::get_user_by_id(&state.pool, &user_id)
+        .await?
+        .ok_or_else(|| AppError::NotFound("用户不存在".to_string()))?;
+    Ok(Json(user))
+}
+
 pub async fn delete_user(
     State(state): State<Arc<AppState>>,
     Path(user_id): Path<String>,
