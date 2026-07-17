@@ -15,6 +15,8 @@ pub fn build_headers(route: &ModelRoute, api_key: &str) -> HeaderMap {
             HeaderValue::from_str(&value),
         ) {
             headers.insert(name, val);
+        } else {
+            tracing::warn!("Failed to parse header: {header_name} = {value}");
         }
     }
 
@@ -27,6 +29,8 @@ pub fn build_headers(route: &ModelRoute, api_key: &str) -> HeaderMap {
                 HeaderValue::from_str(&resolved),
             ) {
                 headers.insert(name, val);
+            } else {
+                tracing::warn!("Failed to parse header: {k} = {resolved}");
             }
         }
     }
