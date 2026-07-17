@@ -18,7 +18,7 @@ impl Router {
         Self::from_hashmap(config.routes)
     }
 
-    pub(crate) fn from_hashmap(mut routes: HashMap<String, ModelRoute>) -> Result<Self, crate::ProxyError> {
+    pub fn from_hashmap(mut routes: HashMap<String, ModelRoute>) -> Result<Self, crate::ProxyError> {
         let fallback = routes.remove("*").ok_or_else(|| {
             crate::ProxyError::Config("Route config must have a '*' fallback route".to_string())
         })?;
