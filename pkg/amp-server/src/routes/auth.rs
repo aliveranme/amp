@@ -86,18 +86,27 @@ pub async fn exchange_token(
 pub async fn get_user(
     State(state): State<Arc<AppState>>,
     headers: axum::http::HeaderMap,
-) -> Json<serde_json::Value> {
+) -> Result<Json<serde_json::Value>, (axum::http::StatusCode, Json<serde_json::Value>)> {
     let api_key = super::extract_api_key(&headers);
 
     if let Some(ref key) = api_key {
-        if let Ok(Some(user)) = users::find_user_by_key(&state.pool, key).await {
-            return Json(serde_json::json!({
-                "id": user.user_id, "name": user.name,
-                "email": format!("{}@byok.local", user.user_id), "credits": 999999.0
-            }));
+        match users::find_user_by_key(&state.pool, key).await {
+            Ok(Some(user)) => {
+                return Ok(Json(serde_json::json!({
+                    "id": user.user_id, "name": user.name,
+                    "email": format!("{}@byok.local", user.user_id), "credits": 999999.0
+                })));
+            }
+            Ok(None) => {} // fall through to anonymous
+            Err(e) => {
+                tracing::error!("DB error in get_user: {e}");
+                return Err((axum::http::StatusCode::INTERNAL_SERVER_ERROR, Json(serde_json::json!({
+                    "error": "server_error"
+                }))));
+            }
         }
     }
-    Json(serde_json::json!({
+    Ok(Json(serde_json::json!({
         "id":"anonymous","name":"Anonymous","email":"anon@byok.local","credits":0.0
-    }))
+    })))
 }

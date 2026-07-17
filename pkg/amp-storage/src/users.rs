@@ -40,13 +40,12 @@ pub async fn list_users(pool: &SqlitePool) -> Result<Vec<UserRow>, sqlx::Error> 
 }
 
 /// Delete a user by user_id.
-pub async fn delete_user(pool: &SqlitePool, user_id: &str) -> bool {
-    sqlx::query("DELETE FROM users WHERE user_id = ?")
+pub async fn delete_user(pool: &SqlitePool, user_id: &str) -> Result<bool, sqlx::Error> {
+    let result = sqlx::query("DELETE FROM users WHERE user_id = ?")
         .bind(user_id)
         .execute(pool)
-        .await
-        .map(|r| r.rows_affected() > 0)
-        .unwrap_or(false)
+        .await?;
+    Ok(result.rows_affected() > 0)
 }
 
 // ─── Routes ───────────────────────────────────────────────────────
@@ -123,13 +122,11 @@ pub async fn delete_user_route(
     pool: &SqlitePool,
     user_id: &str,
     model: &str,
-) -> bool {
-    sqlx::query("DELETE FROM user_routes WHERE user_id = ? AND model = ?")
+) -> Result<bool, sqlx::Error> {
+    let result = sqlx::query("DELETE FROM user_routes WHERE user_id = ? AND model = ?")
         .bind(user_id).bind(model)
-        .execute(pool)
-        .await
-        .map(|r| r.rows_affected() > 0)
-        .unwrap_or(false)
+        .execute(pool).await?;
+    Ok(result.rows_affected() > 0)
 }
 
 // ─── Row types ──────────────────────────────────────────────────

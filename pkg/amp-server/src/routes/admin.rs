@@ -52,9 +52,9 @@ pub async fn list_users(
 pub async fn delete_user(
     State(state): State<Arc<AppState>>,
     Path(user_id): Path<String>,
-) -> Json<serde_json::Value> {
-    let deleted = users::delete_user(&state.pool, &user_id).await;
-    Json(serde_json::json!({"deleted": deleted}))
+) -> Result<Json<serde_json::Value>, AppError> {
+    let deleted = users::delete_user(&state.pool, &user_id).await?;
+    Ok(Json(serde_json::json!({"deleted": deleted})))
 }
 
 // ─── Route CRUD ──────────────────────────────────────────────────
@@ -97,7 +97,7 @@ pub async fn list_routes(
 pub async fn delete_route(
     State(state): State<Arc<AppState>>,
     Path((user_id, model)): Path<(String, String)>,
-) -> Json<serde_json::Value> {
-    let deleted = users::delete_user_route(&state.pool, &user_id, &model).await;
-    Json(serde_json::json!({"deleted": deleted}))
+) -> Result<Json<serde_json::Value>, AppError> {
+    let deleted = users::delete_user_route(&state.pool, &user_id, &model).await?;
+    Ok(Json(serde_json::json!({"deleted": deleted})))
 }
