@@ -1,0 +1,16 @@
+[package]
+name = "amp-code"
+version = "0.1.0"
+edition = "2021"
+
+[[bin]]
+name = "amp-code"
+path = "src/main.rs"
+
+[dependencies]
+amp-core = { path = "../../pkg/amp-core" }
+amp-server = { path = "../../pkg/amp-server" }
+clap = { workspace = true }
+tokio = { workspace = true }
+tracing = { workspace = true }
+tracing-subscriber = { workspace = true }

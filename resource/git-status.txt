@@ -1,0 +1,56 @@
+=== Git Status (2026-07-17T04:16:57+08:00) ===
+On branch aliveranme-init-repo
+Untracked files:
+  (use "git add <file>..." to include in what will be committed)
+	.claude/
+	CLAUDE.md
+	doc/
+	resource/
+
+nothing added to commit but untracked files present (use "git add" to track)
+
+=== Branch ===
+* aliveranme-init-repo
++ main
+
+=== Recent Commits ===
+23ad96b Initial commit
+
+=== Untracked Files ===
+.claude/settings.json
+CLAUDE.md
+doc/OVERVIEW.md
+doc/README.md
+doc/manual/01-getting-started.md
+doc/manual/02-usage.md
+doc/manual/03-agents-md.md
+doc/manual/04-projects.md
+doc/manual/05-orbs-runners.md
+doc/manual/06-tools.md
+doc/manual/07-plugins.md
+doc/manual/08-mcp.md
+doc/manual/09-configuration.md
+doc/manual/10-pricing.md
+doc/manual/11-cli.md
+doc/manual/12-code-review.md
+doc/manual/13-skills.md
+doc/tech/architecture.md
+doc/tech/plugin-system.md
+doc/tech/protocol.md
+resource/README.md
+resource/amp
+resource/amp-version.txt
+resource/amp.sha256
+resource/binary/analysis.md
+resource/binary/extracted/amp.js
+resource/binary/load-commands.txt
+resource/binary/sections/analysis.md
+resource/binary/strings/catalog.md
+resource/binary/strings/embedded-files.txt
+resource/binary/strings/errors.txt
+resource/binary/strings/graphql-operations.txt
+resource/binary/strings/vfs-paths.txt
+resource/binary/symbols/analysis.md
+resource/git-status.txt
+resource/install.sh
+resource/utils/unbuned/

@@ -1,0 +1,21 @@
+# Large binary artifacts (re-downloadable)
+resource/amp
+
+# Extracted JS bundle (generated, re-extractable)
+resource/binary/extracted/amp.js
+
+# Claude Code working files
+.claude/
+
+# OS files
+.DS_Store
+*.swp
+*.swo
+
+# Python cache
+__pycache__/
+*.pyc
+
+# Temp extraction output
+/output/
+target/
