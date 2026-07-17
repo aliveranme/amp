@@ -12,7 +12,14 @@ use tokio_stream::StreamExt;
 use amp_proxy::transformer::ChatRequest;
 use amp_storage::users;
 
-use super::AppState;
+use super::{extract_api_key, AppState};
+
+/// Build default route from global config (fallback when no user or no user route)
+fn default_upstream(state: &Arc<AppState>, model: &str) -> (String, String, String) {
+    let route = state.router.route(model);
+    let endpoint = state.config.url.clone().unwrap_or_else(|| route.endpoint.clone());
+    (endpoint, state.config.api_key.clone(), "Authorization".to_string())
+}
 
 /// POST /v1/chat/completions — route by user config, fallback to global defaults
 pub async fn chat_completion(
@@ -25,23 +32,19 @@ pub async fn chat_completion(
     // Identify user from API key
     let api_key = extract_api_key(&headers);
     let user = if let Some(ref key) = api_key {
-        users::find_user_by_key(&state.pool, key).await
+        users::find_user_by_key(&state.pool, key).await.unwrap_or(None)
     } else { None };
 
-    // Determine upstream endpoint + API key
+    // Determine upstream endpoint + auth parameters
     let (upstream_endpoint, provider_key, auth_header) = if let Some(ref u) = user {
         match users::find_user_route(&state.pool, &u.user_id, model).await {
             Ok(Some(r)) if !r.api_key_encrypted.is_empty() => {
                 (r.endpoint, r.api_key_encrypted, r.auth_header)
             }
-            _ => {
-                let route = state.router.route(model);
-                (route.endpoint.clone(), state.config.api_key.clone(), "Authorization".to_string())
-            }
+            _ => default_upstream(&state, model),
         }
     } else {
-        let route = state.router.route(model);
-        (route.endpoint.clone(), state.config.api_key.clone(), "Authorization".to_string())
+        default_upstream(&state, model)
     };
 
     let effective_key = if provider_key.is_empty() { state.config.api_key.clone() } else { provider_key };
@@ -67,18 +70,4 @@ pub async fn chat_completion(
             .interval(std::time::Duration::from_secs(15))
             .text(": keepalive"),
     )
-}
-
-fn extract_api_key(headers: &HeaderMap) -> Option<String> {
-    headers
-        .get(axum::http::header::AUTHORIZATION)
-        .and_then(|v| v.to_str().ok())
-        .map(|v| v.strip_prefix("Bearer ").unwrap_or(v).to_string())
-        .or_else(|| {
-            headers
-                .get("x-api-key")?
-                .to_str()
-                .ok()
-                .map(|s| s.to_string())
-        })
 }

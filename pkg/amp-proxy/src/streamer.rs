@@ -43,11 +43,9 @@ pub fn stream_chat_completion_simple(
     tokio::spawn(async move {
         let mut headers = reqwest::header::HeaderMap::new();
         headers.insert("content-type", HeaderValue::from_static("application/json"));
-        if let (Ok(name), Ok(val)) = (
-            HeaderName::from_bytes(auth_header.as_bytes()),
-            HeaderValue::from_str(&api_key),
-        ) {
-            headers.insert(name, val);
+        match (HeaderName::from_bytes(auth_header.as_bytes()), HeaderValue::from_str(&api_key)) {
+            (Ok(name), Ok(val)) => { headers.insert(name, val); }
+            _ => tracing::warn!("Invalid auth header config: header={auth_header}, key_len={}", api_key.len()),
         }
 
         let http_request = client.post(&endpoint).headers(headers).json(&request).send().await;
@@ -88,10 +86,10 @@ async fn forward_stream(
                             }
                         }
                     }
-                    Err(e) => { let _ = tx.send(Err(super::ProxyError::Upstream(e.to_string()))).await; break; }
+                    Err(e) => { if tx.send(Err(super::ProxyError::Upstream(e.to_string()))).await.is_err() { return; } break; }
                 }
             }
         }
-        Err(e) => { let _ = tx.send(Err(super::ProxyError::Upstream(e.to_string()))).await; }
+        Err(e) => { if tx.send(Err(super::ProxyError::Upstream(e.to_string()))).await.is_err() { return; } }
     }
 }

@@ -22,15 +22,14 @@ pub async fn create_user(
     Ok(UserRow { api_key, user_id, name: name.to_string(), created_at: now })
 }
 
-/// Look up a user by API key.
-pub async fn find_user_by_key(pool: &SqlitePool, api_key: &str) -> Option<UserRow> {
+/// Look up a user by API key. Returns Ok(None) if not found, Err on DB failure.
+pub async fn find_user_by_key(pool: &SqlitePool, api_key: &str) -> Result<Option<UserRow>, sqlx::Error> {
     sqlx::query_as::<_, UserRow>(
         "SELECT api_key, user_id, name, created_at FROM users WHERE api_key = ?"
     )
     .bind(api_key)
     .fetch_optional(pool)
     .await
-    .unwrap_or(None)
 }
 
 /// List all users.

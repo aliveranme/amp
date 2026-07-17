@@ -4,6 +4,7 @@ use axum::extract::{Path, State};
 use axum::Json;
 use serde::{Deserialize, Serialize};
 
+use amp_core::AppError;
 use amp_storage::users;
 use amp_storage::users::{UserRouteRow, UserRow};
 
@@ -26,16 +27,14 @@ pub struct CreateUserResponse {
 pub async fn create_user(
     State(state): State<Arc<AppState>>,
     Json(req): Json<CreateUserRequest>,
-) -> Json<CreateUserResponse> {
+) -> Result<Json<CreateUserResponse>, AppError> {
     let name = req.name.unwrap_or_else(|| "default".to_string());
-    let user = users::create_user(&state.pool, &name)
-        .await
-        .expect("Failed to create user");
-    Json(CreateUserResponse {
+    let user = users::create_user(&state.pool, &name).await?;
+    Ok(Json(CreateUserResponse {
         api_key: user.api_key,
         user_id: user.user_id,
         name: user.name,
-    })
+    }))
 }
 
 #[derive(Serialize)]
@@ -45,9 +44,9 @@ pub struct ListUsersResponse {
 
 pub async fn list_users(
     State(state): State<Arc<AppState>>,
-) -> Json<ListUsersResponse> {
-    let users = users::list_users(&state.pool).await.unwrap_or_default();
-    Json(ListUsersResponse { users })
+) -> Result<Json<ListUsersResponse>, AppError> {
+    let users = users::list_users(&state.pool).await?;
+    Ok(Json(ListUsersResponse { users }))
 }
 
 pub async fn delete_user(
@@ -73,7 +72,7 @@ pub async fn create_route(
     State(state): State<Arc<AppState>>,
     Path(user_id): Path<String>,
     Json(req): Json<CreateRouteRequest>,
-) -> Json<serde_json::Value> {
+) -> Result<Json<serde_json::Value>, AppError> {
     users::upsert_user_route(
         &state.pool,
         &user_id,
@@ -83,19 +82,16 @@ pub async fn create_route(
         &req.api_key.unwrap_or_default(),
         &req.auth_header.unwrap_or_else(|| "Authorization".to_string()),
     )
-    .await
-    .expect("Failed to upsert route");
-    Json(serde_json::json!({"status": "ok", "model": req.model, "user_id": user_id}))
+    .await?;
+    Ok(Json(serde_json::json!({"status": "ok", "model": req.model, "user_id": user_id})))
 }
 
 pub async fn list_routes(
     State(state): State<Arc<AppState>>,
     Path(user_id): Path<String>,
-) -> Json<Vec<UserRouteRow>> {
-    let routes = users::get_user_routes(&state.pool, &user_id)
-        .await
-        .unwrap_or_default();
-    Json(routes)
+) -> Result<Json<Vec<UserRouteRow>>, AppError> {
+    let routes = users::get_user_routes(&state.pool, &user_id).await?;
+    Ok(Json(routes))
 }
 
 pub async fn delete_route(
