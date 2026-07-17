@@ -1,0 +1,5 @@
+[route."*"]
+provider = "opencode"
+endpoint = "https://opencode.ai/zen/go/v1"
+auth_header = "Authorization"
+auth_scheme = "Bearer"
