@@ -1,5 +1,7 @@
 use amp_core::{AgentMode, Message, MessageRole, Session, SessionStatus, Thread, ThreadStatus};
-use sqlx::sqlite::{SqlitePool, SqlitePoolOptions};
+use sqlx::sqlite::{SqliteConnectOptions, SqlitePool, SqlitePoolOptions};
+use std::path::Path;
+use std::str::FromStr;
 
 use super::migrations::MIGRATIONS;
 
@@ -8,15 +10,25 @@ use super::migrations::MIGRATIONS;
 // ---------------------------------------------------------------------------
 
 pub async fn init_pool(path: &str) -> Result<SqlitePool, sqlx::Error> {
-    // Ensure sqlite:// prefix for sqlx compatibility
-    let url = if path.starts_with("sqlite://") {
-        path.to_string()
+    let options = if path.starts_with("sqlite://") {
+        SqliteConnectOptions::from_str(path)?
+    } else if path == ":memory:" {
+        SqliteConnectOptions::from_str("sqlite::memory:")?
     } else {
-        format!("sqlite://{}", path)
-    };
+        // Resolve relative paths against current directory
+        let abs_path = if Path::new(path).is_absolute() {
+            path.to_string()
+        } else {
+            let cwd = std::env::current_dir().unwrap_or_default();
+            cwd.join(path).to_string_lossy().to_string()
+        };
+        SqliteConnectOptions::from_str(&format!("sqlite://{}", abs_path))?
+    }
+    .create_if_missing(true);
+
     let pool = SqlitePoolOptions::new()
         .max_connections(5)
-        .connect(&url)
+        .connect_with(options)
         .await?;
     sqlx::query("PRAGMA foreign_keys = ON").execute(&pool).await?;
     run_migrations(&pool).await?;
