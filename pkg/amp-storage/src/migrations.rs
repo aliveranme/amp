@@ -48,4 +48,22 @@ pub const MIGRATIONS: &[&str] = &[
         UNIQUE(user_id, model)
     );",
     "CREATE INDEX IF NOT EXISTS idx_user_routes_user ON user_routes(user_id);",
+    // v3: Usage tracking + route control
+    "CREATE TABLE IF NOT EXISTS usage_logs (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        user_id TEXT NOT NULL REFERENCES users(user_id),
+        model TEXT NOT NULL,
+        provider TEXT NOT NULL,
+        tokens_in INTEGER NOT NULL DEFAULT 0,
+        tokens_out INTEGER NOT NULL DEFAULT 0,
+        duration_ms INTEGER NOT NULL DEFAULT 0,
+        status TEXT NOT NULL DEFAULT 'success',
+        created_at TEXT NOT NULL
+    );",
+    "CREATE INDEX IF NOT EXISTS idx_usage_logs_user ON usage_logs(user_id);",
+    "CREATE INDEX IF NOT EXISTS idx_usage_logs_date ON usage_logs(created_at);",
+    // Add enabled/disabled + rate limit to routes
+    "ALTER TABLE user_routes ADD COLUMN enabled INTEGER NOT NULL DEFAULT 1;",
+    "ALTER TABLE user_routes ADD COLUMN rate_limit INTEGER NOT NULL DEFAULT 0;",
+    "ALTER TABLE user_routes ADD COLUMN max_tokens INTEGER NOT NULL DEFAULT 0;",
 ];

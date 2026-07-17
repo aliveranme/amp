@@ -65,6 +65,10 @@ pub async fn create(config: AppConfig) -> Router {
         .route("/admin/api/users/{user_id}/routes", get(admin::list_routes))
         .route("/admin/api/users/{user_id}/routes", post(admin::create_route))
         .route("/admin/api/users/{user_id}/routes/{model}", delete(admin::delete_route))
+        .route("/admin/api/users/{user_id}/routes/{model}", patch(admin::toggle_route))
+        // Usage stats
+        .route("/admin/api/usage", get(admin::get_global_usage))
+        .route("/admin/api/users/{user_id}/usage", get(admin::get_user_usage))
         // Proxy
         .route("/v1/chat/completions", post(chat::chat_completion))
         // Threads

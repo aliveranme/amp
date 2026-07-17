@@ -1,6 +1,6 @@
 use std::sync::Arc;
 
-use axum::extract::{Path, State};
+use axum::extract::{Path, Query, State};
 use axum::Json;
 use serde::{Deserialize, Serialize};
 
@@ -17,11 +17,17 @@ pub async fn dashboard_stats(
 ) -> Result<Json<serde_json::Value>, AppError> {
     let user_count = users::user_count(&state.pool).await?;
     let route_count = users::route_count(&state.pool).await?;
+    let usage = users::get_global_usage(&state.pool, 7).await?;
     Ok(Json(serde_json::json!({
         "user_count": user_count,
         "route_count": route_count,
-    }))
-)}
+        "usage_7d": {
+            "total_requests": usage.total_requests,
+            "total_tokens_in": usage.total_tokens_in,
+            "total_tokens_out": usage.total_tokens_out,
+        }
+    })))
+}
 
 // ─── User CRUD ──────────────────────────────────────────────────
 
@@ -44,16 +50,12 @@ pub async fn create_user(
     let name = req.name.unwrap_or_else(|| "default".to_string());
     let user = users::create_user(&state.pool, &name).await?;
     Ok(Json(CreateUserResponse {
-        api_key: user.api_key,
-        user_id: user.user_id,
-        name: user.name,
+        api_key: user.api_key, user_id: user.user_id, name: user.name,
     }))
 }
 
 #[derive(Serialize)]
-pub struct ListUsersResponse {
-    pub users: Vec<UserRow>,
-}
+pub struct ListUsersResponse { pub users: Vec<UserRow> }
 
 pub async fn list_users(
     State(state): State<Arc<AppState>>,
@@ -81,9 +83,7 @@ pub async fn delete_user(
 }
 
 #[derive(Deserialize)]
-pub struct UpdateUserNameRequest {
-    pub name: String,
-}
+pub struct UpdateUserNameRequest { pub name: String }
 
 pub async fn update_user_name(
     State(state): State<Arc<AppState>>,
@@ -92,6 +92,30 @@ pub async fn update_user_name(
 ) -> Result<Json<serde_json::Value>, AppError> {
     let updated = users::update_user_name(&state.pool, &user_id, &req.name).await?;
     Ok(Json(serde_json::json!({"updated": updated})))
+}
+
+// ─── Usage Stats ────────────────────────────────────────────────
+
+#[derive(Deserialize)]
+pub struct UsageQuery { pub days: Option<i32> }
+
+pub async fn get_user_usage(
+    State(state): State<Arc<AppState>>,
+    Path(user_id): Path<String>,
+    Query(q): Query<UsageQuery>,
+) -> Result<Json<serde_json::Value>, AppError> {
+    let days = q.days.unwrap_or(7);
+    let usage = users::get_user_usage(&state.pool, &user_id, days).await?;
+    Ok(Json(serde_json::json!(usage)))
+}
+
+pub async fn get_global_usage(
+    State(state): State<Arc<AppState>>,
+    Query(q): Query<UsageQuery>,
+) -> Result<Json<serde_json::Value>, AppError> {
+    let days = q.days.unwrap_or(7);
+    let usage = users::get_global_usage(&state.pool, days).await?;
+    Ok(Json(serde_json::json!(usage)))
 }
 
 // ─── Route CRUD ──────────────────────────────────────────────────
@@ -103,6 +127,9 @@ pub struct CreateRouteRequest {
     pub endpoint: String,
     pub api_key: Option<String>,
     pub auth_header: Option<String>,
+    pub enabled: Option<bool>,
+    pub rate_limit: Option<i64>,
+    pub max_tokens: Option<i64>,
 }
 
 pub async fn create_route(
@@ -111,15 +138,14 @@ pub async fn create_route(
     Json(req): Json<CreateRouteRequest>,
 ) -> Result<Json<serde_json::Value>, AppError> {
     users::upsert_user_route(
-        &state.pool,
-        &user_id,
-        &req.model,
-        &req.provider,
-        &req.endpoint,
+        &state.pool, &user_id,
+        &req.model, &req.provider, &req.endpoint,
         &req.api_key.unwrap_or_default(),
         &req.auth_header.unwrap_or_else(|| "Authorization".to_string()),
-    )
-    .await?;
+        req.enabled.unwrap_or(true),
+        req.rate_limit.unwrap_or(0),
+        req.max_tokens.unwrap_or(0),
+    ).await?;
     Ok(Json(serde_json::json!({"status": "ok", "model": req.model, "user_id": user_id})))
 }
 
@@ -137,4 +163,16 @@ pub async fn delete_route(
 ) -> Result<Json<serde_json::Value>, AppError> {
     let deleted = users::delete_user_route(&state.pool, &user_id, &model).await?;
     Ok(Json(serde_json::json!({"deleted": deleted})))
+}
+
+#[derive(Deserialize)]
+pub struct ToggleRouteRequest { pub enabled: bool }
+
+pub async fn toggle_route(
+    State(state): State<Arc<AppState>>,
+    Path((user_id, model)): Path<(String, String)>,
+    Json(req): Json<ToggleRouteRequest>,
+) -> Result<Json<serde_json::Value>, AppError> {
+    let ok = users::set_route_enabled(&state.pool, &user_id, &model, req.enabled).await?;
+    Ok(Json(serde_json::json!({"updated": ok, "enabled": req.enabled})))
 }
