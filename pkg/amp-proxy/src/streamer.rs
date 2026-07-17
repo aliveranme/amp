@@ -34,11 +34,15 @@ pub fn stream_chat_completion(
                 if !resp.status().is_success() {
                     let status = resp.status();
                     let body = resp.text().await.unwrap_or_default();
-                    let _ = tx
+                    if tx
                         .send(Err(super::ProxyError::Upstream(format!(
                             "HTTP {status}: {body}"
                         ))))
-                        .await;
+                        .await
+                        .is_err()
+                    {
+                        return;
+                    }
                     return;
                 }
 
@@ -54,25 +58,42 @@ pub fn stream_chat_completion(
                                     continue;
                                 }
                                 if let Some(data) = line.strip_prefix("data: ") {
-                                    if let Ok(chunk) = serde_json::from_str::<ChatChunk>(data) {
-                                        let _ = tx.send(Ok(chunk)).await;
+                                    match serde_json::from_str::<ChatChunk>(data) {
+                                        Ok(chunk) => {
+                                            if tx.send(Ok(chunk)).await.is_err() {
+                                                return;
+                                            }
+                                        }
+                                        Err(e) => {
+                                            tracing::warn!(
+                                                "Failed to parse SSE data as ChatChunk: {e}, data: {data}"
+                                            );
+                                        }
                                     }
                                 }
                             }
                         }
                         Err(e) => {
-                            let _ = tx
+                            if tx
                                 .send(Err(super::ProxyError::Upstream(e.to_string())))
-                                .await;
+                                .await
+                                .is_err()
+                            {
+                                return;
+                            }
                             break;
                         }
                     }
                 }
             }
             Err(e) => {
-                let _ = tx
+                if tx
                     .send(Err(super::ProxyError::Upstream(e.to_string())))
-                    .await;
+                    .await
+                    .is_err()
+                {
+                    return;
+                }
             }
         }
     });
