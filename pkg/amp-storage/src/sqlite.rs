@@ -8,9 +8,15 @@ use super::migrations::MIGRATIONS;
 // ---------------------------------------------------------------------------
 
 pub async fn init_pool(path: &str) -> Result<SqlitePool, sqlx::Error> {
+    // Ensure sqlite:// prefix for sqlx compatibility
+    let url = if path.starts_with("sqlite://") {
+        path.to_string()
+    } else {
+        format!("sqlite://{}", path)
+    };
     let pool = SqlitePoolOptions::new()
         .max_connections(5)
-        .connect(path)
+        .connect(&url)
         .await?;
     sqlx::query("PRAGMA foreign_keys = ON").execute(&pool).await?;
     run_migrations(&pool).await?;
