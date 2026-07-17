@@ -29,4 +29,23 @@ pub const MIGRATIONS: &[&str] = &[
     );",
     "CREATE INDEX IF NOT EXISTS idx_messages_thread_id ON messages(thread_id);",
     "CREATE INDEX IF NOT EXISTS idx_sessions_thread_id ON sessions(thread_id);",
+    // v2: User management for multi-tenant BYOK
+    "CREATE TABLE IF NOT EXISTS users (
+        api_key TEXT PRIMARY KEY,
+        user_id TEXT NOT NULL UNIQUE,
+        name TEXT NOT NULL DEFAULT '',
+        created_at TEXT NOT NULL
+    );",
+    "CREATE TABLE IF NOT EXISTS user_routes (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        user_id TEXT NOT NULL REFERENCES users(user_id),
+        model TEXT NOT NULL,
+        provider TEXT NOT NULL,
+        endpoint TEXT NOT NULL,
+        auth_header TEXT DEFAULT 'Authorization',
+        api_key_encrypted TEXT NOT NULL DEFAULT '',
+        created_at TEXT NOT NULL,
+        UNIQUE(user_id, model)
+    );",
+    "CREATE INDEX IF NOT EXISTS idx_user_routes_user ON user_routes(user_id);",
 ];
