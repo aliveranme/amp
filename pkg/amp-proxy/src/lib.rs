@@ -1,5 +1,6 @@
 pub mod injector;
 pub mod router;
+pub mod streamer;
 pub mod transformer;
 
 #[derive(Debug, thiserror::Error)]

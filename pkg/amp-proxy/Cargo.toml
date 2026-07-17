@@ -5,10 +5,12 @@ edition = "2021"
 
 [dependencies]
 amp-core = { path = "../amp-core" }
+futures = "0.3"
+reqwest = { workspace = true }
 serde = { workspace = true }
 serde_json = { workspace = true }
-reqwest = { workspace = true }
+thiserror = { workspace = true }
 tokio = { workspace = true }
+tokio-stream = "0.1"
 toml = { workspace = true }
 tracing = { workspace = true }
-thiserror = { workspace = true }
