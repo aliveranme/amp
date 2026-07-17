@@ -22,13 +22,16 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Toaster, toast } from "sonner";
-import { fetchRoutes, createRoute, deleteRoute } from "@/lib/api";
-import type { UserRoute } from "@/lib/types";
+import { fetchRoutes, createRoute, deleteRoute, fetchUsers, updateUserName } from "@/lib/api";
+import type { User, UserRoute } from "@/lib/types";
 
 export default function UserDetailPage() {
   const { id } = useParams<{ id: string }>();
   const router = useRouter();
   const [routes, setRoutes] = useState<UserRoute[]>([]);
+  const [user, setUser] = useState<User | null>(null);
+  const [editingName, setEditingName] = useState(false);
+  const [newName, setNewName] = useState("");
   const [open, setOpen] = useState(false);
 
   // Form state
@@ -39,12 +42,26 @@ export default function UserDetailPage() {
 
   const load = async () => {
     try {
-      setRoutes(await fetchRoutes(id));
+      const [r, u] = await Promise.all([fetchRoutes(id), fetchUsers()]);
+      setRoutes(r);
+      setUser(u.find((x) => x.user_id === id) ?? null);
     } catch {
       toast.error("无法加载路由配置");
     }
   };
   useEffect(() => { load(); }, [id]);
+
+  const handleRename = async () => {
+    if (!newName.trim()) return;
+    try {
+      await updateUserName(id, newName);
+      toast.success("名称已更新");
+      setEditingName(false);
+      await load();
+    } catch {
+      toast.error("更新失败");
+    }
+  };
 
   const handleAddRoute = async () => {
     if (!endpoint.trim()) return;
@@ -78,7 +95,25 @@ export default function UserDetailPage() {
           <Button variant="ghost" onClick={() => router.push("/admin")}>
             ← 返回
           </Button>
-          <h1 className="text-xl font-bold">用户路由配置</h1>
+          {editingName ? (
+            <div className="flex gap-2 flex-1">
+              <Input
+                value={newName}
+                onChange={(e) => setNewName(e.target.value)}
+                onKeyDown={(e) => e.key === "Enter" && handleRename()}
+                placeholder="新名称"
+              />
+              <Button size="sm" onClick={handleRename}>保存</Button>
+              <Button size="sm" variant="outline" onClick={() => setEditingName(false)}>取消</Button>
+            </div>
+          ) : (
+            <>
+              <h1 className="text-xl font-bold">{user?.name ?? "用户"}</h1>
+              <Button size="sm" variant="outline" onClick={() => { setNewName(user?.name ?? ""); setEditingName(true); }}>
+                编辑名称
+              </Button>
+            </>
+          )}
           <Badge variant="outline" className="font-mono">
             {id.slice(0, 8)}...
           </Badge>

@@ -39,6 +39,28 @@ pub async fn list_users(pool: &SqlitePool) -> Result<Vec<UserRow>, sqlx::Error> 
         .await
 }
 
+/// Get total user count.
+pub async fn user_count(pool: &SqlitePool) -> Result<i64, sqlx::Error> {
+    sqlx::query_scalar("SELECT COUNT(*) FROM users")
+        .fetch_one(pool)
+        .await
+}
+
+/// Get total route count.
+pub async fn route_count(pool: &SqlitePool) -> Result<i64, sqlx::Error> {
+    sqlx::query_scalar("SELECT COUNT(*) FROM user_routes")
+        .fetch_one(pool)
+        .await
+}
+
+/// Update user name.
+pub async fn update_user_name(pool: &SqlitePool, user_id: &str, name: &str) -> Result<bool, sqlx::Error> {
+    let r = sqlx::query("UPDATE users SET name = ? WHERE user_id = ?")
+        .bind(name).bind(user_id)
+        .execute(pool).await?;
+    Ok(r.rows_affected() > 0)
+}
+
 /// Delete a user by user_id.
 pub async fn delete_user(pool: &SqlitePool, user_id: &str) -> Result<bool, sqlx::Error> {
     let result = sqlx::query("DELETE FROM users WHERE user_id = ?")

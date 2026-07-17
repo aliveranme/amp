@@ -10,6 +10,19 @@ use amp_storage::users::{UserRouteRow, UserRow};
 
 use super::AppState;
 
+// ─── Dashboard Stats ────────────────────────────────────────────
+
+pub async fn dashboard_stats(
+    State(state): State<Arc<AppState>>,
+) -> Result<Json<serde_json::Value>, AppError> {
+    let user_count = users::user_count(&state.pool).await?;
+    let route_count = users::route_count(&state.pool).await?;
+    Ok(Json(serde_json::json!({
+        "user_count": user_count,
+        "route_count": route_count,
+    }))
+)}
+
 // ─── User CRUD ──────────────────────────────────────────────────
 
 #[derive(Deserialize)]
@@ -55,6 +68,20 @@ pub async fn delete_user(
 ) -> Result<Json<serde_json::Value>, AppError> {
     let deleted = users::delete_user(&state.pool, &user_id).await?;
     Ok(Json(serde_json::json!({"deleted": deleted})))
+}
+
+#[derive(Deserialize)]
+pub struct UpdateUserNameRequest {
+    pub name: String,
+}
+
+pub async fn update_user_name(
+    State(state): State<Arc<AppState>>,
+    Path(user_id): Path<String>,
+    Json(req): Json<UpdateUserNameRequest>,
+) -> Result<Json<serde_json::Value>, AppError> {
+    let updated = users::update_user_name(&state.pool, &user_id, &req.name).await?;
+    Ok(Json(serde_json::json!({"updated": updated})))
 }
 
 // ─── Route CRUD ──────────────────────────────────────────────────

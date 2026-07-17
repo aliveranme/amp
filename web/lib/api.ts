@@ -2,6 +2,13 @@ import type { Thread, User, UserRoute } from '@/lib/types';
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
 
+// ─── Stats ────────────────────────────────────────────────────────
+
+export async function fetchStats(): Promise<{ user_count: number; route_count: number }> {
+  const res = await fetch(`${API_BASE}/admin/api/stats`);
+  return res.json();
+}
+
 // ─── Threads ─────────────────────────────────────────────────────
 
 export async function fetchThreads(): Promise<Thread[]> {
@@ -37,6 +44,14 @@ export async function createUser(name: string): Promise<User> {
 
 export async function deleteUser(userId: string): Promise<void> {
   await fetch(`${API_BASE}/admin/api/users/${userId}`, { method: 'DELETE' });
+}
+
+export async function updateUserName(userId: string, name: string): Promise<void> {
+  await fetch(`${API_BASE}/admin/api/users/${userId}`, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ name }),
+  });
 }
 
 // ─── Admin: Routes ──────────────────────────────────────────────

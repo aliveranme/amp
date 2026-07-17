@@ -14,19 +14,23 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Toaster, toast } from "sonner";
-import { fetchUsers, createUser, deleteUser } from "@/lib/api";
+import { fetchUsers, createUser, deleteUser, fetchStats } from "@/lib/api";
 import type { User } from "@/lib/types";
 
 export default function AdminPage() {
   const [users, setUsers] = useState<User[]>([]);
+  const [stats, setStats] = useState({ user_count: 0, route_count: 0 });
   const [name, setName] = useState("");
   const [newKey, setNewKey] = useState("");
   const [open, setOpen] = useState(false);
+  const [search, setSearch] = useState("");
   const router = useRouter();
 
   const load = async () => {
     try {
-      setUsers(await fetchUsers());
+      const [u, s] = await Promise.all([fetchUsers(), fetchStats()]);
+      setUsers(u);
+      setStats(s);
     } catch {
       toast.error("无法连接 BYOK 服务器");
     }
@@ -56,6 +60,12 @@ export default function AdminPage() {
     }
   };
 
+  const filtered = users.filter(
+    (u) =>
+      u.name.toLowerCase().includes(search.toLowerCase()) ||
+      u.user_id.includes(search)
+  );
+
   return (
     <div className="min-h-screen bg-background">
       <Toaster />
@@ -63,17 +73,14 @@ export default function AdminPage() {
         <div className="container mx-auto px-4 py-4 flex items-center justify-between">
           <div className="flex items-center gap-4">
             <h1 className="text-xl font-bold">BYOK 管理</h1>
-            <Badge variant={users.length > 0 ? "default" : "secondary"}>
-              {users.length} 用户
-            </Badge>
+            <Badge variant="secondary">{stats.user_count} 用户</Badge>
+            <Badge variant="outline">{stats.route_count} 路由</Badge>
           </div>
           <Dialog open={open} onOpenChange={setOpen}>
             <DialogTrigger render={<Button>创建用户</Button>} />
             <DialogContent>
               <DialogHeader>
-                <DialogTitle>
-                  {newKey ? "用户创建成功" : "创建新用户"}
-                </DialogTitle>
+                <DialogTitle>{newKey ? "用户创建成功" : "创建新用户"}</DialogTitle>
               </DialogHeader>
               {newKey ? (
                 <div className="space-y-4">
@@ -95,10 +102,7 @@ export default function AdminPage() {
                   <Button
                     variant="outline"
                     className="w-full"
-                    onClick={() => {
-                      setNewKey("");
-                      setOpen(false);
-                    }}
+                    onClick={() => { setNewKey(""); setOpen(false); }}
                   >
                     完成
                   </Button>
@@ -119,19 +123,47 @@ export default function AdminPage() {
         </div>
       </header>
 
-      <main className="container mx-auto px-4 py-8">
+      <main className="container mx-auto px-4 py-8 space-y-6">
+        {/* Stats */}
+        <div className="grid grid-cols-2 gap-4">
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm text-muted-foreground">总用户</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-3xl font-bold">{stats.user_count}</p>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm text-muted-foreground">总路由</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-3xl font-bold">{stats.route_count}</p>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Search */}
+        <Input
+          placeholder="搜索用户..."
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+        />
+
+        {/* User List */}
         <Card>
           <CardHeader>
             <CardTitle>用户列表</CardTitle>
           </CardHeader>
           <CardContent>
-            {users.length === 0 ? (
+            {filtered.length === 0 ? (
               <p className="text-muted-foreground text-center py-8">
-                还没有用户。点击 "创建用户" 开始。
+                {search ? "无匹配用户" : "还没有用户。点击 创建用户 开始。"}
               </p>
             ) : (
               <div className="space-y-2">
-                {users.map((u) => (
+                {filtered.map((u) => (
                   <div
                     key={u.user_id}
                     className="flex items-center justify-between p-3 rounded-lg border hover:bg-accent/50 cursor-pointer"

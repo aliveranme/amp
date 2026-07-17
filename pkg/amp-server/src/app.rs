@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 use std::sync::Arc;
 
-use axum::routing::{delete, get, post};
+use axum::routing::{delete, get, patch, post};
 use axum::Router;
 use tokio::sync::Mutex;
 use tower_http::cors::CorsLayer;
@@ -56,9 +56,11 @@ pub async fn create(config: AppConfig) -> Router {
         .route("/auth/token", post(auth::exchange_token))
         .route("/api/user", get(auth::get_user))
         // Admin API — multi-user management
+        .route("/admin/api/stats", get(admin::dashboard_stats))
         .route("/admin/api/users", get(admin::list_users))
         .route("/admin/api/users", post(admin::create_user))
         .route("/admin/api/users/{user_id}", delete(admin::delete_user))
+        .route("/admin/api/users/{user_id}", patch(admin::update_user_name))
         .route("/admin/api/users/{user_id}/routes", get(admin::list_routes))
         .route("/admin/api/users/{user_id}/routes", post(admin::create_route))
         .route("/admin/api/users/{user_id}/routes/{model}", delete(admin::delete_route))
