@@ -30,7 +30,7 @@ async fn main() {
 
     if cli.server {
         tracing::info!("Starting amp-code server on {}:{}", cli.host, cli.port);
-        let mut config = AppConfig::from_env();
+        let mut config = AppConfig::load();
         config.host = cli.host;
         config.port = cli.port;
         config.db_path = cli.db;

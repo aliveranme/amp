@@ -11,3 +11,5 @@ uuid = { workspace = true }
 thiserror = { workspace = true }
 sqlx = { workspace = true }
 axum = { workspace = true }
+dirs = "6"
+tracing = "0.1"
