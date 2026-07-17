@@ -6,6 +6,9 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import {
   Dialog,
   DialogContent,
@@ -14,12 +17,22 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Toaster, toast } from "sonner";
-import { fetchUsers, createUser, deleteUser, fetchStats } from "@/lib/api";
-import type { User } from "@/lib/types";
+import { fetchUsers, createUser, deleteUser, fetchStats, fetchThreads } from "@/lib/api";
+import type { User, Thread } from "@/lib/types";
+
+function UserAvatar({ name }: { name: string }) {
+  return (
+    <Avatar className="h-8 w-8">
+      <AvatarFallback className="text-xs">{name.slice(0, 2).toUpperCase()}</AvatarFallback>
+    </Avatar>
+  );
+}
 
 export default function AdminPage() {
   const [users, setUsers] = useState<User[]>([]);
+  const [threads, setThreads] = useState<Thread[]>([]);
   const [stats, setStats] = useState({ user_count: 0, route_count: 0 });
+  const [loading, setLoading] = useState(true);
   const [name, setName] = useState("");
   const [newKey, setNewKey] = useState("");
   const [open, setOpen] = useState(false);
@@ -27,12 +40,16 @@ export default function AdminPage() {
   const router = useRouter();
 
   const load = async () => {
+    setLoading(true);
     try {
-      const [u, s] = await Promise.all([fetchUsers(), fetchStats()]);
+      const [u, s, t] = await Promise.all([fetchUsers(), fetchStats(), fetchThreads()]);
       setUsers(u);
       setStats(s);
+      setThreads(t);
     } catch {
       toast.error("无法连接 BYOK 服务器");
+    } finally {
+      setLoading(false);
     }
   };
   useEffect(() => { load(); }, []);
@@ -69,10 +86,10 @@ export default function AdminPage() {
   return (
     <div className="min-h-screen bg-background">
       <Toaster />
-      <header className="border-b">
+      <header className="border-b bg-card">
         <div className="container mx-auto px-4 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <h1 className="text-xl font-bold">BYOK 管理</h1>
+          <div className="flex items-center gap-3">
+            <h1 className="text-xl font-bold tracking-tight">BYOK 管理</h1>
             <Badge variant="secondary">{stats.user_count} 用户</Badge>
             <Badge variant="outline">{stats.route_count} 路由</Badge>
           </div>
@@ -87,14 +104,11 @@ export default function AdminPage() {
                   <p className="text-sm text-muted-foreground">
                     请保存以下 API Key——关闭后不再显示：
                   </p>
-                  <pre className="bg-muted p-3 rounded text-sm break-all select-all">
+                  <pre className="bg-muted p-3 rounded text-sm break-all select-all font-mono">
                     {newKey}
                   </pre>
                   <Button
-                    onClick={() => {
-                      navigator.clipboard.writeText(newKey);
-                      toast.success("已复制");
-                    }}
+                    onClick={() => { navigator.clipboard.writeText(newKey); toast.success("已复制"); }}
                     className="w-full"
                   >
                     复制 API Key
@@ -123,75 +137,128 @@ export default function AdminPage() {
         </div>
       </header>
 
-      <main className="container mx-auto px-4 py-8 space-y-6">
-        {/* Stats */}
-        <div className="grid grid-cols-2 gap-4">
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm text-muted-foreground">总用户</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-3xl font-bold">{stats.user_count}</p>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm text-muted-foreground">总路由</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-3xl font-bold">{stats.route_count}</p>
-            </CardContent>
-          </Card>
-        </div>
+      <main className="container mx-auto px-4 py-6">
+        <Tabs defaultValue="users">
+          <TabsList className="mb-6">
+            <TabsTrigger value="users">用户管理</TabsTrigger>
+            <TabsTrigger value="overview">总览</TabsTrigger>
+          </TabsList>
 
-        {/* Search */}
-        <Input
-          placeholder="搜索用户..."
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-        />
+          <TabsContent value="overview" className="space-y-6">
+            {/* Stats Grid */}
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              {loading ? (
+                <>
+                  {[...Array(4)].map((_, i) => (
+                    <Card key={i}><CardContent className="pt-6"><Skeleton className="h-4 w-20 mb-2" /><Skeleton className="h-8 w-16" /></CardContent></Card>
+                  ))}
+                </>
+              ) : (
+                <>
+                  <Card><CardContent className="pt-6"><p className="text-sm text-muted-foreground">用户数</p><p className="text-3xl font-bold mt-1">{stats.user_count}</p></CardContent></Card>
+                  <Card><CardContent className="pt-6"><p className="text-sm text-muted-foreground">路由数</p><p className="text-3xl font-bold mt-1">{stats.route_count}</p></CardContent></Card>
+                  <Card><CardContent className="pt-6"><p className="text-sm text-muted-foreground">线程数</p><p className="text-3xl font-bold mt-1">{threads.length}</p></CardContent></Card>
+                  <Card><CardContent className="pt-6"><p className="text-sm text-muted-foreground">活跃状态</p><p className="text-3xl font-bold mt-1 text-green-600">运行中</p></CardContent></Card>
+                </>
+              )}
+            </div>
 
-        {/* User List */}
-        <Card>
-          <CardHeader>
-            <CardTitle>用户列表</CardTitle>
-          </CardHeader>
-          <CardContent>
-            {filtered.length === 0 ? (
-              <p className="text-muted-foreground text-center py-8">
-                {search ? "无匹配用户" : "还没有用户。点击 创建用户 开始。"}
-              </p>
-            ) : (
-              <div className="space-y-2">
-                {filtered.map((u) => (
-                  <div
-                    key={u.user_id}
-                    className="flex items-center justify-between p-3 rounded-lg border hover:bg-accent/50 cursor-pointer"
-                    onClick={() => router.push(`/admin/users/${u.user_id}`)}
-                  >
-                    <div>
-                      <p className="font-medium">{u.name}</p>
-                      <p className="text-xs text-muted-foreground font-mono">
-                        {u.user_id.slice(0, 8)}... | {u.created_at.slice(0, 10)}
-                      </p>
-                    </div>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="text-destructive"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleDelete(u.user_id);
-                      }}
-                    >
-                      删除
-                    </Button>
+            {/* Recent Threads */}
+            <Card>
+              <CardHeader><CardTitle>最近线程</CardTitle></CardHeader>
+              <CardContent>
+                {loading ? (
+                  <div className="space-y-3">{[...Array(3)].map((_, i) => <Skeleton key={i} className="h-12 w-full" />)}</div>
+                ) : threads.length === 0 ? (
+                  <p className="text-muted-foreground text-center py-6 text-sm">暂无线程</p>
+                ) : (
+                  <div className="divide-y">
+                    {threads.slice(0, 5).map((t) => (
+                      <div key={t.id} className="py-3 flex items-center justify-between">
+                        <div>
+                          <p className="text-sm font-medium">{t.title || "未命名线程"}</p>
+                          <p className="text-xs text-muted-foreground font-mono">{t.id.slice(0, 8)}...</p>
+                        </div>
+                        <Badge variant={t.status === "Active" ? "default" : "secondary"}>{t.status}</Badge>
+                      </div>
+                    ))}
                   </div>
-                ))}
-              </div>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="users" className="space-y-4">
+            {/* Search */}
+            <div className="flex gap-2">
+              <Input
+                placeholder="搜索用户名或 ID..."
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                className="max-w-sm"
+              />
+              {search && (
+                <Button variant="ghost" size="sm" onClick={() => setSearch("")}>清除</Button>
+              )}
+            </div>
+
+            {/* User List */}
+            <Card>
+              <CardContent className="p-0">
+                {loading ? (
+                  <div className="p-4 space-y-4">
+                    {[...Array(3)].map((_, i) => (
+                      <div key={i} className="flex items-center gap-3">
+                        <Skeleton className="h-8 w-8 rounded-full" />
+                        <div className="flex-1"><Skeleton className="h-4 w-32 mb-1" /><Skeleton className="h-3 w-20" /></div>
+                        <Skeleton className="h-8 w-16" />
+                      </div>
+                    ))}
+                  </div>
+                ) : filtered.length === 0 ? (
+                  <p className="text-muted-foreground text-center py-12 text-sm">
+                    {search ? `未找到 "${search}"` : "还没有用户。点击右上角创建用户。"}
+                  </p>
+                ) : (
+                  <div className="divide-y">
+                    {filtered.map((u) => (
+                      <div
+                        key={u.user_id}
+                        className="flex items-center gap-3 px-4 py-3 hover:bg-accent/50 cursor-pointer transition-colors"
+                        onClick={() => router.push(`/admin/users/${u.user_id}`)}
+                      >
+                        <UserAvatar name={u.name} />
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium truncate">{u.name}</p>
+                          <p className="text-xs text-muted-foreground font-mono truncate">
+                            {u.user_id.slice(0, 8)}... · {u.created_at.slice(0, 10)}
+                          </p>
+                        </div>
+                        <Badge variant="outline" className="text-xs font-mono">
+                          {u.api_key.slice(0, 12)}...
+                        </Badge>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="text-destructive shrink-0"
+                          onClick={(e) => { e.stopPropagation(); handleDelete(u.user_id); }}
+                        >
+                          删除
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+
+            {!loading && filtered.length > 0 && (
+              <p className="text-xs text-muted-foreground text-center">
+                共 {filtered.length} 个用户{search !== "" && `（匹配 "${search}"）`}
+              </p>
             )}
-          </CardContent>
-        </Card>
+          </TabsContent>
+        </Tabs>
       </main>
     </div>
   );

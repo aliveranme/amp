@@ -7,6 +7,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import {
   Dialog,
   DialogContent,
@@ -25,6 +27,30 @@ import { Toaster, toast } from "sonner";
 import { fetchRoutes, createRoute, deleteRoute, fetchUser, updateUserName } from "@/lib/api";
 import type { User, UserRoute } from "@/lib/types";
 
+function RouteCard({ route, onDelete }: { route: UserRoute; onDelete: () => void }) {
+  return (
+    <div className="flex items-center justify-between p-4 border rounded-lg hover:bg-accent/30 transition-colors">
+      <div className="space-y-1 min-w-0 flex-1">
+        <div className="flex items-center gap-2">
+          <Badge className="font-mono">{route.model}</Badge>
+          <span className="text-xs text-muted-foreground">→</span>
+          <Badge variant="secondary">{route.provider}</Badge>
+        </div>
+        <p className="text-xs text-muted-foreground font-mono truncate">{route.endpoint}</p>
+        <p className="text-xs text-muted-foreground">
+          认证: <span className="font-mono">{route.auth_header}</span>
+          {route.api_key_encrypted && (
+            <> · Key: <span className="font-mono">{route.api_key_encrypted.slice(0, 8)}…</span></>
+          )}
+        </p>
+      </div>
+      <Button variant="ghost" size="sm" className="text-destructive shrink-0 ml-4" onClick={onDelete}>
+        删除
+      </Button>
+    </div>
+  );
+}
+
 export default function UserDetailPage() {
   const { id } = useParams<{ id: string }>();
   const router = useRouter();
@@ -35,15 +61,15 @@ export default function UserDetailPage() {
   const [newName, setNewName] = useState("");
   const [open, setOpen] = useState(false);
 
-  // Form state
+  // Route form state
   const [model, setModel] = useState("*");
   const [provider, setProvider] = useState("opencode");
   const [endpoint, setEndpoint] = useState("");
   const [apiKey, setApiKey] = useState("");
 
   const load = async () => {
+    setLoading(true);
     try {
-      setLoading(true);
       const [r, u] = await Promise.all([fetchRoutes(id), fetchUser(id)]);
       setRoutes(r);
       setUser(u);
@@ -94,53 +120,89 @@ export default function UserDetailPage() {
   return (
     <div className="min-h-screen bg-background">
       <Toaster />
-      <header className="border-b">
-        <div className="container mx-auto px-4 py-4 flex items-center gap-4">
-          <Button variant="ghost" onClick={() => router.push("/admin")}>
+
+      {/* Header */}
+      <header className="border-b bg-card">
+        <div className="container mx-auto px-4 py-3 flex items-center gap-3">
+          <Button variant="ghost" size="sm" onClick={() => router.push("/admin")}>
             ← 返回
           </Button>
           {editingName ? (
-            <div className="flex gap-2 flex-1">
+            <div className="flex items-center gap-2 flex-1 max-w-md">
               <Input
                 value={newName}
                 onChange={(e) => setNewName(e.target.value)}
                 onKeyDown={(e) => e.key === "Enter" && handleRename()}
                 placeholder="新名称"
+                autoFocus
               />
               <Button size="sm" onClick={handleRename}>保存</Button>
               <Button size="sm" variant="outline" onClick={() => setEditingName(false)}>取消</Button>
             </div>
           ) : (
-            <>
-              <h1 className="text-xl font-bold">{loading ? "加载中..." : (user?.name ?? "用户")}</h1>
-              <Button size="sm" variant="outline" disabled={loading} onClick={() => { setNewName(user?.name ?? ""); setEditingName(true); }}>
-                编辑名称
-              </Button>
-            </>
+            <div className="flex items-center gap-2 flex-1">
+              {loading ? (
+                <Skeleton className="h-6 w-40" />
+              ) : (
+                <>
+                  <Avatar className="h-7 w-7">
+                    <AvatarFallback className="text-[10px]">{(user?.name ?? "?").slice(0, 2).toUpperCase()}</AvatarFallback>
+                  </Avatar>
+                  <h1 className="text-lg font-semibold">{user?.name ?? "用户"}</h1>
+                  <Button size="sm" variant="outline" disabled={loading} onClick={() => { setNewName(user?.name ?? ""); setEditingName(true); }}>
+                    编辑名称
+                  </Button>
+                </>
+              )}
+            </div>
           )}
-          <Badge variant="outline" className="font-mono">
-            {id.slice(0, 8)}...
-          </Badge>
+          <Badge variant="outline" className="font-mono text-xs">{id.slice(0, 8)}…</Badge>
         </div>
       </header>
 
-      <main className="container mx-auto px-4 py-8">
+      <main className="container mx-auto px-4 py-6 space-y-6">
+        {/* User Info Section */}
+        <Card>
+          <CardHeader><CardTitle className="text-base">用户信息</CardTitle></CardHeader>
+          <CardContent>
+            {loading ? (
+              <div className="space-y-2">
+                <Skeleton className="h-4 w-48" />
+                <Skeleton className="h-4 w-64" />
+                <Skeleton className="h-4 w-32" />
+              </div>
+            ) : user ? (
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+                <div>
+                  <p className="text-muted-foreground text-xs">API Key</p>
+                  <p className="font-mono text-xs mt-0.5 break-all">{user.api_key}</p>
+                </div>
+                <div>
+                  <p className="text-muted-foreground text-xs">用户 ID</p>
+                  <p className="font-mono text-xs mt-0.5">{user.user_id}</p>
+                </div>
+                <div>
+                  <p className="text-muted-foreground text-xs">创建时间</p>
+                  <p className="text-xs mt-0.5">{user.created_at.slice(0, 19).replace("T", " ")}</p>
+                </div>
+              </div>
+            ) : null}
+          </CardContent>
+        </Card>
+
+        {/* Routes Section */}
         <Card>
           <CardHeader className="flex flex-row items-center justify-between">
-            <CardTitle>路由规则</CardTitle>
+            <CardTitle className="text-base">路由规则</CardTitle>
             <Dialog open={open} onOpenChange={setOpen}>
               <DialogTrigger render={<Button size="sm">添加路由</Button>} />
               <DialogContent>
-                <DialogHeader>
-                  <DialogTitle>添加路由规则</DialogTitle>
-                </DialogHeader>
+                <DialogHeader><DialogTitle>添加路由规则</DialogTitle></DialogHeader>
                 <div className="space-y-4">
                   <div>
                     <label className="text-sm font-medium">模型名</label>
-                    <Select value={model} onValueChange={(v: string | null) => v && setModel(v)}>
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
+                    <Select value={model} onValueChange={(v) => v && setModel(v)}>
+                      <SelectTrigger><SelectValue /></SelectTrigger>
                       <SelectContent>
                         <SelectItem value="*">*（所有模型）</SelectItem>
                         <SelectItem value="gpt-4o">gpt-4o</SelectItem>
@@ -156,59 +218,28 @@ export default function UserDetailPage() {
                   </div>
                   <div>
                     <label className="text-sm font-medium">端点 URL</label>
-                    <Input
-                      placeholder="https://api.openai.com/v1/chat/completions"
-                      value={endpoint}
-                      onChange={(e) => setEndpoint(e.target.value)}
-                    />
+                    <Input placeholder="https://api.openai.com/v1/chat/completions" value={endpoint} onChange={(e) => setEndpoint(e.target.value)} />
                   </div>
                   <div>
                     <label className="text-sm font-medium">Provider API Key</label>
-                    <Input
-                      type="password"
-                      placeholder="sk-..."
-                      value={apiKey}
-                      onChange={(e) => setApiKey(e.target.value)}
-                    />
+                    <Input type="password" placeholder="sk-..." value={apiKey} onChange={(e) => setApiKey(e.target.value)} />
                   </div>
-                  <Button className="w-full" onClick={handleAddRoute}>
-                    添加
-                  </Button>
+                  <Button className="w-full" onClick={handleAddRoute}>添加</Button>
                 </div>
               </DialogContent>
             </Dialog>
           </CardHeader>
           <CardContent>
-            {routes.length === 0 ? (
-              <p className="text-muted-foreground text-center py-8">
-                还没有路由规则。点击 "添加路由" 配置。
-              </p>
+            {loading ? (
+              <div className="space-y-3">
+                {[...Array(2)].map((_, i) => <Skeleton key={i} className="h-20 w-full rounded-lg" />)}
+              </div>
+            ) : routes.length === 0 ? (
+              <p className="text-muted-foreground text-center py-8 text-sm">还没有路由规则。点击"添加路由"配置。</p>
             ) : (
               <div className="space-y-3">
                 {routes.map((r) => (
-                  <div key={r.id} className="border rounded-lg p-4">
-                    <div className="flex items-center justify-between mb-2">
-                      <div className="flex items-center gap-2">
-                        <Badge>{r.model}</Badge>
-                        <span className="text-sm text-muted-foreground">→</span>
-                        <Badge variant="outline">{r.provider}</Badge>
-                      </div>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="text-destructive"
-                        onClick={() => handleDeleteRoute(r.model)}
-                      >
-                        删除
-                      </Button>
-                    </div>
-                    <p className="text-xs text-muted-foreground font-mono truncate">
-                      {r.endpoint}
-                    </p>
-                    <p className="text-xs text-muted-foreground mt-1">
-                      Auth: {r.auth_header} | Key: {r.api_key_encrypted.slice(0, 8)}...
-                    </p>
-                  </div>
+                  <RouteCard key={r.id} route={r} onDelete={() => handleDeleteRoute(r.model)} />
                 ))}
               </div>
             )}
