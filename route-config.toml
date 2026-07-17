@@ -1,0 +1,31 @@
+[route."gpt-4o"]
+provider = "openai"
+endpoint = "https://api.openai.com/v1/chat/completions"
+auth_header = "Authorization"
+auth_scheme = "Bearer"
+
+[route."gpt-4o-mini"]
+provider = "openai"
+endpoint = "https://api.openai.com/v1/chat/completions"
+auth_header = "Authorization"
+auth_scheme = "Bearer"
+
+[route."claude-sonnet-4"]
+provider = "anthropic"
+endpoint = "https://api.anthropic.com/v1/messages"
+auth_header = "x-api-key"
+[route."claude-sonnet-4".extra_headers]
+anthropic-version = "2023-06-01"
+
+[route."claude-fable-5"]
+provider = "anthropic"
+endpoint = "https://api.anthropic.com/v1/messages"
+auth_header = "x-api-key"
+[route."claude-fable-5".extra_headers]
+anthropic-version = "2023-06-01"
+
+[route."*"]
+provider = "openai"
+endpoint = "https://api.openai.com/v1/chat/completions"
+auth_header = "Authorization"
+auth_scheme = "Bearer"
