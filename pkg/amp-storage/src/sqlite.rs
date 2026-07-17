@@ -37,10 +37,16 @@ pub async fn init_pool(path: &str) -> Result<SqlitePool, sqlx::Error> {
 
 pub(crate) async fn run_migrations(pool: &SqlitePool) -> Result<(), sqlx::Error> {
     for (i, migration) in MIGRATIONS.iter().enumerate() {
-        sqlx::query(migration).execute(pool).await.map_err(|e| {
-            tracing::error!("Migration {i} failed: {e}");
-            e
-        })?;
+        if let Err(e) = sqlx::query(migration).execute(pool).await {
+            let msg = e.to_string();
+            // SQLite ALTER TABLE ADD COLUMN throws "duplicate column" if column exists
+            if msg.contains("duplicate column name") {
+                tracing::warn!("Migration {i}: column exists, skipping: {msg}");
+            } else {
+                tracing::error!("Migration {i} failed: {e}");
+                return Err(e);
+            }
+        }
     }
     tracing::info!("Database migrations applied ({})", MIGRATIONS.len());
     Ok(())

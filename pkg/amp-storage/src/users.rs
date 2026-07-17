@@ -88,7 +88,8 @@ pub async fn get_user_routes(
     user_id: &str,
 ) -> Result<Vec<UserRouteRow>, sqlx::Error> {
     sqlx::query_as::<_, UserRouteRow>(
-        "SELECT id, user_id, model, provider, endpoint, auth_header, api_key_encrypted, created_at
+        "SELECT id, user_id, model, provider, endpoint, auth_header, api_key_encrypted, created_at,
+                enabled, rate_limit, max_tokens
          FROM user_routes WHERE user_id = ? ORDER BY model"
     )
     .bind(user_id)
@@ -103,7 +104,8 @@ pub async fn find_user_route(
     model: &str,
 ) -> Result<Option<UserRouteRow>, sqlx::Error> {
     let exact = sqlx::query_as::<_, UserRouteRow>(
-        "SELECT id, user_id, model, provider, endpoint, auth_header, api_key_encrypted, created_at
+        "SELECT id, user_id, model, provider, endpoint, auth_header, api_key_encrypted, created_at,
+                enabled, rate_limit, max_tokens
          FROM user_routes WHERE user_id = ? AND model = ?"
     )
     .bind(user_id).bind(model)
@@ -115,7 +117,8 @@ pub async fn find_user_route(
 
     // Fallback to wildcard
     sqlx::query_as::<_, UserRouteRow>(
-        "SELECT id, user_id, model, provider, endpoint, auth_header, api_key_encrypted, created_at
+        "SELECT id, user_id, model, provider, endpoint, auth_header, api_key_encrypted, created_at,
+                enabled, rate_limit, max_tokens
          FROM user_routes WHERE user_id = ? AND model = '*'"
     )
     .bind(user_id)
