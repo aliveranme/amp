@@ -20,15 +20,18 @@ pub async fn create(config: AppConfig) -> Router {
     let route_router = if let Some(path) = &config.route_config_path {
         AmpRouter::from_config(path).expect("Invalid route config")
     } else {
-        let routes = toml::from_str(include_str!("../../../route-config.toml"))
+        let route_config: amp_core::RouteConfig = toml::from_str(include_str!("../../../route-config.toml"))
             .expect("Invalid default route config");
-        AmpRouter::from_hashmap(routes).expect("Invalid default route config")
+        AmpRouter::from_hashmap(route_config.routes).expect("Invalid default route config")
     };
+
+    let client = reqwest::Client::new();
 
     let state = Arc::new(AppState {
         config,
         router: route_router,
         pool,
+        client,
     });
 
     Router::new()

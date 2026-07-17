@@ -11,4 +11,5 @@ pub struct AppState {
     pub config: AppConfig,
     pub router: Router,
     pub pool: SqlitePool,
+    pub client: reqwest::Client,
 }

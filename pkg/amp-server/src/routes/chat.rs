@@ -7,7 +7,6 @@ use axum::{
 };
 use futures::stream::Stream;
 use futures::StreamExt;
-use reqwest::Client;
 
 use amp_proxy::transformer::ChatRequest;
 
@@ -25,7 +24,7 @@ pub async fn chat_completion(
     let route = state.router.route(model).clone();
 
     let stream = amp_proxy::streamer::stream_chat_completion(
-        Client::new(),
+        state.client.clone(),
         route,
         state.config.api_key.clone(),
         state.config.url.clone(),
@@ -43,6 +42,6 @@ pub async fn chat_completion(
     Sse::new(event_stream).keep_alive(
         axum::response::sse::KeepAlive::new()
             .interval(std::time::Duration::from_secs(15))
-            .text("[DONE]"),
+            .text(": keepalive"),
     )
 }
